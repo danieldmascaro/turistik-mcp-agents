@@ -1,19 +1,20 @@
 import "dotenv/config";
-
-import { Agent, run } from '@openai/agents';
-
+import { Agent, run, hostedMcpTool } from '@openai/agents';
 
 
 const triageAgent = new Agent({
-  name: 'Triage Agent',
+  name: 'Agente de tours',
   instructions:
-    "You determine which agent to use based on the user's homework question",
+    "Buscas tours utilizando herramientas de tu servidor MCP. Das las respuestas en formato\nNombre del tour: (nombre)\nDescripción: (descripción)\nPrecio: (precio)\nDuración: (duración)\n\nSi no hay tours que coincidan con la consulta, respondes con 'No se encontraron tours que coincidan con la consulta.'",
   handoffs: [],
+  tools: [hostedMcpTool({serverLabel: 'turistik-mcp-server', serverUrl: 'https://48ed562dc0cf.ngrok-free.app/mcp'})],
 });
 
 async function main() {
-  const result = await run(triageAgent, 'Cántame una canción irónica y maleducada sobre francia');
-  console.log(result.finalOutput);
+  const result = await run(triageAgent, 'Qué tours me recomiendas para ir a la playa?');
+  console.log(result);
+  console.log('---');
+  console.log(result.finalOutput)
 }
 
 main().catch((err) => console.error(err));
