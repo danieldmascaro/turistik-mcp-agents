@@ -41,3 +41,7 @@ coverage/
 *.cache
 *.local
 .tmp/
+
+# Test files
+*.test.*
+*.spec.*
