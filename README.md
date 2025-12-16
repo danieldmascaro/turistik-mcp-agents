@@ -108,7 +108,7 @@ Para testear el funcionamiento de los agentes:
    ```ts
    tools: [
      hostedMcpTool({
-       serverLabel: 'turistik-mcp-server',
+       serverLabel: 'servidor-guerra-del-pacifico',
        serverUrl: 'LINK_DE_NGROK'
      })
    ]
