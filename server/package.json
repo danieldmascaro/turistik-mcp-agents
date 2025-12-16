@@ -9,13 +9,17 @@
     "run": "tsx",
     "test:mcpapi": "tsx src/services/mcpAPITest/mcpService.ts"
   },
-  "files": ["build"],
+  "files": [
+    "build"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
+    "@types/woocommerce__woocommerce-rest-api": "^1.0.5",
+    "@woocommerce/woocommerce-rest-api": "^1.0.2",
     "dotenv": "^17.2.3",
     "mssql": "^12.2.0",
     "zod": "^3.25.76"
@@ -27,4 +31,3 @@
     "typescript": "^5.9.3"
   }
 }
-
