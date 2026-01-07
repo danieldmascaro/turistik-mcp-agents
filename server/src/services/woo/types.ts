@@ -1,3 +1,19 @@
+import { z } from "zod";
+
+export const ListarExcursionesWooInputSchema = z.object({
+  consulta: z.object({
+    nombre: z.string().describe("Nombre del tour/excursión (texto libre).").default(""),
+    precio_min: z.number().describe("Precio mínimo, en pesos chilenos CLP").default(0),
+    precio_max: z.number().describe("Precio máximo, en pesos chilenos CLP.").default(999999),
+    categoria: z
+      .union([z.number().int(), z.string()])
+      .describe("Categoría (ID numérico o slug).")
+      .default(""),
+  }),
+});
+
+export type ListarExcursionesWooInput = z.infer<typeof ListarExcursionesWooInputSchema>;
+
 type IdOrSlug = number | string;
 
 export interface WooProductCategory {

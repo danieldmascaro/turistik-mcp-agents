@@ -9,29 +9,41 @@ if (!baseURL || !consumerKey || !consumerSecret) {
   throw new Error("Faltan variables de entorno: WC_BASE_URL, WC_CONSUMER_KEY, WC_CONSUMER_SECRET");
 }
 
-/**
- * Nota:
- * Para REST API v3, WooCommerce acepta Basic Auth usando ck/cs.
- * En HTTPS suele funcionar sin problemas.
- */
 export const wc = axios.create({
   baseURL: `${baseURL.replace(/\/$/, "")}/wp-json/wc/v3`,
-  auth: {
-    username: consumerKey,
-    password: consumerSecret,
-  },
+  auth: { username: consumerKey, password: consumerSecret },
   timeout: 15000,
 });
 
 type QueryPrimitive = string | number | boolean;
+type QueryValue = QueryPrimitive | QueryPrimitive[];
 
-const serializeQueryValue = (value: QueryPrimitive | QueryPrimitive[]): string =>
+// 👇 DTO liviano (lo que verá tu agente)
+export type WooProductSummary = {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  prices: {
+    price: string;         // Woo suele devolver string
+    regular_price: string;
+    sale_price: string | null;
+    on_sale: boolean;
+  };
+  main_image: { src: string; thumbnail?: string; alt?: string } | null;
+};
+
+// 👇 Extiende tu query para soportar _fields (opcional pero recomendado)
+export type WooProductQueryLite = WooProductQuery & {
+  fields?: string[]; // se serializa a _fields=...
+};
+
+const serializeQueryValue = (value: QueryValue): string =>
   Array.isArray(value) ? value.map(String).join(",") : String(value);
 
-const buildQueryParams = (query: WooProductQuery): Record<string, string> => {
+const buildQueryParams = (query: WooProductQueryLite): Record<string, string> => {
   const params: Record<string, string> = {};
-
-  const append = (key: string, value?: QueryPrimitive | QueryPrimitive[]) => {
+  const append = (key: string, value?: QueryValue) => {
     if (value === undefined) return;
     params[key] = serializeQueryValue(value);
   };
@@ -43,7 +55,10 @@ const buildQueryParams = (query: WooProductQuery): Record<string, string> => {
   append("exclude", query.exclude);
   append("min_price", query.min_price);
   append("max_price", query.max_price);
+
+  // 👇 fuerza status publish a nivel API (aunque el caller mande otra cosa, se pisa en la función)
   append("status", query.status);
+
   append("featured", query.featured);
   append("on_sale", query.on_sale);
   append("order", query.order);
@@ -51,24 +66,99 @@ const buildQueryParams = (query: WooProductQuery): Record<string, string> => {
   append("page", query.page);
   append("per_page", query.per_page);
 
+  // 👇 WP REST global param: limita campos del response
+  // (WooCommerce lo respeta vía get_fields_for_response / _fields=)
+  append("_fields", query.fields);
+
   return params;
 };
 
-export async function listarExcursionesWoo(
-  query: WooProductQuery = {}
-): Promise<WooListResponse<WooProduct[]>> {
-  const params = buildQueryParams(query);
-  const response = await wc.get<WooProduct[]>("/products", { params });
-
-  const headers = response.headers;
-  const total = Number(headers["x-wp-total"] ?? headers["X-WP-Total"] ?? 0);
-  const totalPages = Number(headers["x-wp-totalpages"] ?? headers["X-WP-TotalPages"] ?? 0);
+const toSummary = (p: Partial<WooProduct>): WooProductSummary => {
+  const images = Array.isArray((p as any).images) ? ((p as any).images as any[]) : [];
+  const main = images
+    .slice()
+    .sort((a, b) => (a?.position ?? 9999) - (b?.position ?? 9999))[0] ?? null;
 
   return {
-    data: response.data,
-    pagination: {
-      total,
-      totalPages,
+    id: Number((p as any).id),
+    name: String((p as any).name ?? ""),
+    slug: String((p as any).slug ?? ""),
+    permalink: String((p as any).permalink ?? ""),
+    prices: {
+      price: String((p as any).price ?? ""),
+      regular_price: String((p as any).regular_price ?? ""),
+      sale_price: ((p as any).sale_price ?? null) === "" ? null : ((p as any).sale_price ?? null),
+      on_sale: Boolean((p as any).on_sale),
     },
+    main_image: main
+      ? {
+          src: String(main.src ?? ""),
+          thumbnail: main.thumbnail ? String(main.thumbnail) : undefined,
+          alt: main.alt ? String(main.alt) : undefined,
+        }
+      : null,
+  };
+};
+
+export async function listarExcursionesWoo(
+  query: WooProductQueryLite = {}
+): Promise<WooListResponse<WooProductSummary[]>> {
+  // 👇 SIEMPRE publish
+  const enforcedQuery: WooProductQueryLite = {
+    ...query,
+    status: "publish",
+    // 👇 campos mínimos que necesitas (ajusta a tu gusto)
+    fields: query.fields ?? [
+      "id",
+      "name",
+      "slug",
+      "permalink",
+      "price",
+      "regular_price",
+      "sale_price",
+      "on_sale",
+      "images",
+    ],
+  };
+
+  const params = buildQueryParams(enforcedQuery);
+
+  // No paginar: recorrer todas las páginas y devolver todo
+  const perPage = Number(params.per_page ?? 100) || 100;
+  delete params.page;
+  params.per_page = String(Math.min(perPage, 100));
+
+  const all: Partial<WooProduct>[] = [];
+  let page = 1;
+  let total = 0;
+  let totalPages = 0;
+
+  while (true) {
+    const response = await wc.get<Partial<WooProduct>[]>("/products", {
+      params: { ...params, page: String(page) },
+    });
+
+    if (page === 1) {
+      const headers = response.headers;
+      total = Number(headers["x-wp-total"] ?? headers["X-WP-Total"] ?? 0);
+      totalPages = Number(headers["x-wp-totalpages"] ?? headers["X-WP-TotalPages"] ?? 0);
+    }
+
+    all.push(...response.data);
+
+    if (response.data.length < Number(params.per_page)) {
+      break;
+    }
+
+    if (totalPages && page >= totalPages) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return {
+    data: all.map(toSummary),
+    pagination: { total, totalPages },
   };
 }

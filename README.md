@@ -167,7 +167,6 @@ El desafío es reducir esa abstracción a componentes simples, observables y con
 ## Onboarding y continuidad del proyecto  
 *(por si me voy a la guerra del pacífico, me da un infarto o este proyecto cambia de manos)*
 
-Este proyecto no es solo código. Es, principalmente, **una forma de pensar sistemas**.
 
 ### Conocimientos técnicos recomendados
 
@@ -187,7 +186,9 @@ Este proyecto no es solo código. Es, principalmente, **una forma de pensar sist
 
 ## Notas finales
 
-Este proyecto debe entenderse como un **sistema vivo**, en constante adaptación.
+Este proyecto debe entenderse como un protocolo de comunicación, en donde la estructura y el orden
+son claves para el correcto funcionamiento del servidor MCP.
+
 
 El valor principal no está en una implementación específica ni en un SDK puntual, sino en **la arquitectura, las abstracciones y el criterio aplicado al diseño de agentes y contextos**.
 

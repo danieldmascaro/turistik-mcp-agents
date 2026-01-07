@@ -1,14 +1,19 @@
 import "dotenv/config";
-import { createServer, IncomingMessage, Server, ServerResponse } from "node:http";
+import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { URL } from "node:url";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { CategoriaSchema, ConsultaToursSchema, type ConsultaTours } from "./services/mcpAPITest/types.js";
-import { listarTours } from "./services/mcpAPITest/mcpService.js";
+import { listarExcursionesWoo } from "./services/woo/main.js";
+import {
+  ListarExcursionesWooInputSchema,
+  type ListarExcursionesWooInput,
+} from "./services/woo/types.js";
 
 const text = (t: string) => ({ type: "text", text: t } as const);
+
+
 
 function createMCPServer() {
   const server = new McpServer({
@@ -17,38 +22,19 @@ function createMCPServer() {
   });
 
   server.registerTool(
-    "ListarTours",
+    "ListarExcursionesWoo",
     {
-      title: "Listar Tours",
+      title: "Listar Excursiones (WooCommerce)",
       description:
-        "Herramienta para solicitar tours, según el contexto de la conversación. Normalmente filtrarás por categoría, a menos que se especifique el nombre de un ticket",
-      inputSchema: {
-        // Wrapper para que el Inspector muestre campos y puedas probar fácil
-        consulta: z.object({
-          nombre: z.string().describe("Nombre del tour.").default(""),
-          precio_min: z.number().describe("Precio mínimo.").default(0),
-          precio_max: z.number().describe("Precio máximo.").default(999999),
-          palabras_clave: z
-            .array(CategoriaSchema)
-            .describe("Categorías para filtrar.")
-            .default([]),
-        }),
-      },
+        "Lista excursiones (productos Woo) filtrando únicamente por nombre, rango de precio y categoría (ID o slug).",
+      inputSchema: ListarExcursionesWooInputSchema,
       outputSchema: {
-        data: z.unknown().describe("JSON devuelto por la API."),
+        data: z.unknown().describe("JSON devuelto por Woo: { data: WooProduct[], pagination: { total, totalPages } }."),
       },
     },
-    async ({ consulta }) => {
-
-      const payload: ConsultaTours = {};
-
-      if (consulta.nombre.trim() !== "") payload.nombre = consulta.nombre.trim();
-      if (consulta.precio_min !== 0) payload.precio_min = consulta.precio_min;
-      if (consulta.precio_max !== 0) payload.precio_max = consulta.precio_max;
-      if (consulta.palabras_clave.length > 0) payload.palabras_clave = consulta.palabras_clave;
-
-      // Validación runtime con tu schema (opcional, pero consistente)
-      const parsed = ConsultaToursSchema.safeParse(payload);
+    async ({ consulta }: z.infer<typeof ListarExcursionesWooInputSchema>) => {
+      // Validación de schema (por si llega algo raro desde el runtime)
+      const parsed = ListarExcursionesWooInputSchema.safeParse({ consulta });
       if (!parsed.success) {
         return {
           content: [text("❌ Input inválido:\n" + parsed.error.toString())],
@@ -56,23 +42,58 @@ function createMCPServer() {
         };
       }
 
+      const { nombre, precio_min, precio_max, categoria } = parsed.data.consulta;
+
+      // Validación lógica: min <= max
+      if (precio_min > precio_max) {
+        return {
+          content: [text("❌ Input inválido: precio_min no puede ser mayor que precio_max")],
+          structuredContent: { data: { error: "VALIDATION_ERROR", message: "precio_min > precio_max" } },
+        };
+      }
+
+      // Construimos query SOLO con campos permitidos
+      const query: {
+        search?: string;
+        min_price?: number;
+        max_price?: number;
+        category?: number | string | Array<number | string>;
+      } = {};
+
+      const nameTrimmed = nombre.trim();
+      if (nameTrimmed) query.search = nameTrimmed;
+      if (typeof precio_min === "number" && precio_min > 0) query.min_price = precio_min;
+      if (typeof precio_max === "number" && precio_max > 0 && precio_max < 999999) query.max_price = precio_max;
+      if (typeof categoria === "number") {
+        query.category = categoria;
+      } else if (typeof categoria === "string" && categoria.trim() !== "") {
+        query.category = categoria.trim();
+      }
+
       try {
-        const data = await listarTours(parsed.data);
+        const data = await listarExcursionesWoo(query as any);
 
         return {
           content: [text(JSON.stringify(data, null, 2))],
           structuredContent: { data },
         };
       } catch (err: any) {
-        const status = typeof err?.status === "number" ? err.status : undefined;
-        const payloadErr = err?.payload ?? undefined;
+        const status =
+          typeof err?.status === "number"
+            ? err.status
+            : typeof err?.response?.status === "number"
+              ? err.response.status
+              : undefined;
+
+        const payloadErr = err?.payload ?? err?.response?.data ?? undefined;
+
         const message =
           typeof err?.message === "string"
             ? err.message
-            : "Error desconocido llamando listarTours";
+            : "Error desconocido llamando listarExcursionesWoo";
 
         return {
-          content: [text(`❌ Falló listarTours${status ? ` (status ${status})` : ""}: ${message}`)],
+          content: [text(`❌ Falló listarExcursionesWoo${status ? ` (status ${status})` : ""}: ${message}`)],
           structuredContent: { data: { error: "API_ERROR", status, message, payload: payloadErr } },
         };
       }
@@ -172,7 +193,6 @@ httpServer.listen(PORT, () => {
   console.log(`📡 SSE stream: GET http://localhost:${PORT}${ssePath}`);
   console.log(`📨 Post:       POST http://localhost:${PORT}${postPath}?sessionId=...`);
 });
-
 
 main().catch((err) => {
   console.error("Fatal error:", err);
