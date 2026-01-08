@@ -1,17 +1,31 @@
 import "dotenv/config";
-import { Agent, run, hostedMcpTool } from '@openai/agents';
+import { Agent, run, hostedMcpTool, handoff } from '@openai/agents';
+import { PROMPT_KAI_TRIAGE, PROMPT_KAI_HOPON } from "./prompting/prompts.js";
 
+const link_ngrok = 'https://3cf0bf1a5557.ngrok-free.app/mcp';
 
-const triageAgent = new Agent({
-  name: 'Agente de tours',
+const hopOnHopOffAgent = new Agent({
+  name: 'Agente de tours Hop-On Hop-Off',
   instructions:
-    "Buscas tours utilizando herramientas de tu servidor MCP. Das las respuestas en formato\nNombre del tour: (nombre)\nDescripción: (descripción)\nPrecio: (precio)\nDuración: (duración si es que aplica)\n\nDas respuestas directas y buscas la información de manera proactiva para promocionar rápidamente los productos con la menor cantidad de interacciones posibles. Si no hay tours que coincidan con la consulta, respondes con 'No se encontraron tours que coincidan con la consulta.'",
-  handoffs: [],
-  tools: [hostedMcpTool({serverLabel: 'turistik-mcp-server', serverUrl: 'https://dcb16de15efc.ngrok-free.app/mcp'})],
+    PROMPT_KAI_HOPON,
+  tools: [hostedMcpTool({serverLabel: 'turistik-mcp-server', serverUrl: link_ngrok, allowedTools: ['ListarExcursionesWoo']})]
+});
+const excursionesAgent = new Agent({
+  name: 'Agente de Tours y Excursiones',
+  instructions:
+    PROMPT_KAI_TRIAGE,
+  tools: [hostedMcpTool({serverLabel: 'turistik-mcp-server', serverUrl: link_ngrok, allowedTools: ['ListarExcursionesWoo']})]
+});
+
+const triageAgent = Agent.create({
+  name: 'Agente principal',
+  instructions:
+    PROMPT_KAI_TRIAGE,
+  handoffs: [handoff(hopOnHopOffAgent), handoff(excursionesAgent)],
 });
 
 async function main() {
-  const result = await run(triageAgent, 'busca tours a la ciudad de santiago de chile, que valgan menos de 30mil pesos.');
+  const result = await run(triageAgent, 'quiero viajar en los buses hop on.');
   console.log(result);
   console.log('---');
   console.log(result.finalOutput)

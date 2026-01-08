@@ -6,12 +6,48 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { listarExcursionesWoo } from "./services/woo/main.js";
-import {
-  ListarExcursionesWooInputSchema,
-  type ListarExcursionesWooInput,
-} from "./services/woo/types.js";
+import type { WooListProductsQuery } from "./types.js";
 
+/**
+ * Helpers
+ */
 const text = (t: string) => ({ type: "text", text: t } as const);
+
+type ListarExcursionesWooInput = z.infer<typeof ListarExcursionesWooInputSchema>;
+
+const EmptyToUndefined = z
+  .string()
+  .trim()
+  .transform((v) => (v === "" ? undefined : v));
+
+const Precio = z.coerce.number().finite();
+
+export const ListarExcursionesWooInputSchema = z.object({
+  consulta: z
+    .object({
+      nombre: EmptyToUndefined.optional(),
+      precio_min: Precio.min(0).default(0),
+      precio_max: Precio.min(0).max(999999).default(0),
+      categoria: z
+        .union([z.coerce.number().int().positive(), EmptyToUndefined])
+        .optional()
+        .transform((v) => {
+          if (typeof v === "string" && !v) return undefined;
+          return v;
+        }),
+    })
+    .superRefine((val, ctx) => {
+      // Validación lógica: solo si ambos precios están presentes (>0)
+      if (val.precio_min > 0 && val.precio_max > 0 && val.precio_min > val.precio_max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "precio_min no puede ser mayor que precio_max",
+          path: ["precio_min"],
+        });
+      }
+    }),
+});
+
 
 
 
@@ -29,49 +65,24 @@ function createMCPServer() {
         "Lista excursiones (productos Woo) filtrando únicamente por nombre, rango de precio y categoría (ID o slug).",
       inputSchema: ListarExcursionesWooInputSchema,
       outputSchema: {
-        data: z.unknown().describe("JSON devuelto por Woo: { data: WooProduct[], pagination: { total, totalPages } }."),
+        data: z
+          .unknown()
+          .describe("JSON devuelto por Woo: { data: WooProduct[], pagination: { total, totalPages } }."),
       },
     },
-    async ({ consulta }: z.infer<typeof ListarExcursionesWooInputSchema>) => {
-      // Validación de schema (por si llega algo raro desde el runtime)
-      const parsed = ListarExcursionesWooInputSchema.safeParse({ consulta });
-      if (!parsed.success) {
-        return {
-          content: [text("❌ Input inválido:\n" + parsed.error.toString())],
-          structuredContent: { data: { error: "VALIDATION_ERROR", issues: parsed.error.issues } },
-        };
-      }
-
-      const { nombre, precio_min, precio_max, categoria } = parsed.data.consulta;
-
-      // Validación lógica: min <= max
-      if (precio_min > precio_max) {
-        return {
-          content: [text("❌ Input inválido: precio_min no puede ser mayor que precio_max")],
-          structuredContent: { data: { error: "VALIDATION_ERROR", message: "precio_min > precio_max" } },
-        };
-      }
+    async ({ consulta }: ListarExcursionesWooInput) => {
+      const { nombre, precio_min, precio_max, categoria } = consulta;
 
       // Construimos query SOLO con campos permitidos
-      const query: {
-        search?: string;
-        min_price?: number;
-        max_price?: number;
-        category?: number | string | Array<number | string>;
-      } = {};
+      const query: WooListProductsQuery = {};
 
-      const nameTrimmed = nombre.trim();
-      if (nameTrimmed) query.search = nameTrimmed;
-      if (typeof precio_min === "number" && precio_min > 0) query.min_price = precio_min;
-      if (typeof precio_max === "number" && precio_max > 0 && precio_max < 999999) query.max_price = precio_max;
-      if (typeof categoria === "number") {
-        query.category = categoria;
-      } else if (typeof categoria === "string" && categoria.trim() !== "") {
-        query.category = categoria.trim();
-      }
+      if (nombre) query.search = nombre;
+      if (precio_min > 0) query.min_price = precio_min;
+      if (precio_max > 0) query.max_price = precio_max;
+      if (categoria !== undefined) query.category = categoria;
 
       try {
-        const data = await listarExcursionesWoo(query as any);
+        const data = await listarExcursionesWoo(query);
 
         return {
           content: [text(JSON.stringify(data, null, 2))],
