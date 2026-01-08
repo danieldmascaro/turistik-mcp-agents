@@ -5,10 +5,6 @@ export const ListarExcursionesWooInputSchema = z.object({
     nombre: z.string().describe("Nombre del tour/excursión (texto libre).").default(""),
     precio_min: z.number().describe("Precio mínimo, en pesos chilenos CLP").default(0),
     precio_max: z.number().describe("Precio máximo, en pesos chilenos CLP.").default(999999),
-    categoria: z
-      .union([z.number().int(), z.string()])
-      .describe("Categoría (ID numérico o slug).")
-      .default(""),
   }),
 });
 
@@ -85,7 +81,6 @@ export interface WooProductQuery {
   page?: number;
   per_page?: number;
   search?: string;
-  category?: IdOrSlug | IdOrSlug[];
   tag?: IdOrSlug | IdOrSlug[];
   include?: number[];
   exclude?: number[];

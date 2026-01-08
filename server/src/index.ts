@@ -28,13 +28,6 @@ export const ListarExcursionesWooInputSchema = z.object({
       nombre: EmptyToUndefined.optional(),
       precio_min: Precio.min(0).default(0),
       precio_max: Precio.min(0).max(999999).default(0),
-      categoria: z
-        .union([z.coerce.number().int().positive(), EmptyToUndefined])
-        .optional()
-        .transform((v) => {
-          if (typeof v === "string" && !v) return undefined;
-          return v;
-        }),
     })
     .superRefine((val, ctx) => {
       // Validación lógica: solo si ambos precios están presentes (>0)
@@ -62,7 +55,7 @@ function createMCPServer() {
     {
       title: "Listar Excursiones (WooCommerce)",
       description:
-        "Lista excursiones (productos Woo) filtrando únicamente por nombre, rango de precio y categoría (ID o slug).",
+        "Lista excursiones (productos Woo) filtrando por nombre y rango de precio.",
       inputSchema: ListarExcursionesWooInputSchema,
       outputSchema: {
         data: z
@@ -71,7 +64,7 @@ function createMCPServer() {
       },
     },
     async ({ consulta }: ListarExcursionesWooInput) => {
-      const { nombre, precio_min, precio_max, categoria } = consulta;
+      const { nombre, precio_min, precio_max } = consulta;
 
       // Construimos query SOLO con campos permitidos
       const query: WooListProductsQuery = {};
@@ -79,8 +72,7 @@ function createMCPServer() {
       if (nombre) query.search = nombre;
       if (precio_min > 0) query.min_price = precio_min;
       if (precio_max > 0) query.max_price = precio_max;
-      if (categoria !== undefined) query.category = categoria;
-
+      
       try {
         const data = await listarExcursionesWoo(query);
 
@@ -110,6 +102,52 @@ function createMCPServer() {
       }
     }
   );
+  server.registerTool(
+  "ListarBusHopOnHopOffWoo",
+  {
+    title: "Listar Bus Hop-On-Hop-Off (WooCommerce)",
+    description:
+      "Lista excursiones (productos Woo) por precio, forzando busqueda por 'hop' (Bus Hop-On-Hop-Off).",
+    inputSchema: ListarExcursionesWooInputSchema,
+    outputSchema: {
+      data: z.unknown().describe(
+        "JSON devuelto por Woo: { data: WooProduct[], pagination: { total, totalPages } }."
+      ),
+    },
+  },
+  async ({ consulta }: ListarExcursionesWooInput) => {
+    const { precio_min, precio_max } = consulta;
+
+    const query: WooListProductsQuery = { search: "hop" };
+
+    if (precio_min > 0) query.min_price = precio_min;
+    if (precio_max > 0) query.max_price = precio_max;
+    
+    try {
+      const data = await listarExcursionesWoo(query);
+      return { content: [text(JSON.stringify(data, null, 2))], structuredContent: { data } };
+    } catch (err: any) {
+      const status =
+        typeof err?.status === "number"
+          ? err.status
+          : typeof err?.response?.status === "number"
+            ? err.response.status
+            : undefined;
+
+      const payloadErr = err?.payload ?? err?.response?.data ?? undefined;
+
+      const message =
+        typeof err?.message === "string"
+          ? err.message
+          : "Error desconocido llamando listarExcursionesWoo";
+
+      return {
+        content: [text(`❌ Falló listarExcursionesWoo${status ? ` (status ${status})` : ""}: ${message}`)],
+        structuredContent: { data: { error: "API_ERROR", status, message, payload: payloadErr } },
+      };
+    }
+  }
+);
 
   return server;
 }

@@ -1,18 +1,17 @@
 import * as z from 'zod/v4';
 
-/**
- * Information about a validated access token, provided to request handlers.
- */
+
+export type WooListProductsQuery = {
+  search?: string;
+  min_price?: number;
+  max_price?: number;
+};
 
 export const ListarExcursionesWooInputSchema = z.object({
   consulta: z.object({
     nombre: z.string().describe("Nombre del tour/excursión (texto libre).").default(""),
     precio_min: z.number().describe("Precio mínimo.").default(0),
     precio_max: z.number().describe("Precio máximo.").default(999999),
-    categoria: z
-      .union([z.number().int(), z.string()])
-      .describe("Categoría (ID numérico o slug).")
-      .default(""),
   }),
 });
 

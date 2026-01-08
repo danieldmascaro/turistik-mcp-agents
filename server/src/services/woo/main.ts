@@ -6,7 +6,9 @@ const consumerKey = process.env.WC_CONSUMER_KEY;
 const consumerSecret = process.env.WC_CONSUMER_SECRET;
 
 if (!baseURL || !consumerKey || !consumerSecret) {
-  throw new Error("Faltan variables de entorno: WC_BASE_URL, WC_CONSUMER_KEY, WC_CONSUMER_SECRET");
+  throw new Error(
+    "Faltan variables de entorno: WC_BASE_URL, WC_CONSUMER_KEY, WC_CONSUMER_SECRET"
+  );
 }
 
 export const wc = axios.create({
@@ -24,8 +26,13 @@ export type WooProductSummary = {
   name: string;
   slug: string;
   permalink: string;
+
+  // 👇 vienen desde meta_data
+  video: string | null;
+  horario: any | null; // cámbialo a string|null si sabes que siempre es string
+
   prices: {
-    price: string;         // Woo suele devolver string
+    price: string; // Woo suele devolver string
     regular_price: string;
     sale_price: string | null;
     on_sale: boolean;
@@ -49,14 +56,13 @@ const buildQueryParams = (query: WooProductQueryLite): Record<string, string> =>
   };
 
   append("search", query.search);
-  append("category", query.category);
   append("tag", query.tag);
   append("include", query.include);
   append("exclude", query.exclude);
   append("min_price", query.min_price);
   append("max_price", query.max_price);
 
-  // 👇 fuerza status publish a nivel API (aunque el caller mande otra cosa, se pisa en la función)
+  // 👇 fuerza status publish a nivel API
   append("status", query.status);
 
   append("featured", query.featured);
@@ -67,29 +73,40 @@ const buildQueryParams = (query: WooProductQueryLite): Record<string, string> =>
   append("per_page", query.per_page);
 
   // 👇 WP REST global param: limita campos del response
-  // (WooCommerce lo respeta vía get_fields_for_response / _fields=)
   append("_fields", query.fields);
 
   return params;
 };
 
+const getMeta = (meta: any[], key: string): any =>
+  meta?.find((m) => m?.key === key)?.value ?? null;
+
 const toSummary = (p: Partial<WooProduct>): WooProductSummary => {
   const images = Array.isArray((p as any).images) ? ((p as any).images as any[]) : [];
-  const main = images
-    .slice()
-    .sort((a, b) => (a?.position ?? 9999) - (b?.position ?? 9999))[0] ?? null;
+  const main =
+    images.slice().sort((a, b) => (a?.position ?? 9999) - (b?.position ?? 9999))[0] ?? null;
+
+  const meta = Array.isArray((p as any).meta_data) ? (p as any).meta_data : [];
+
+  const videoVal = getMeta(meta, "video");
+  const horarioVal = getMeta(meta, "horario");
 
   return {
     id: Number((p as any).id),
     name: String((p as any).name ?? ""),
     slug: String((p as any).slug ?? ""),
     permalink: String((p as any).permalink ?? ""),
+
+    video: videoVal != null && videoVal !== "" ? String(videoVal) : null,
+    horario: horarioVal === "" ? null : horarioVal,
+
     prices: {
       price: String((p as any).price ?? ""),
       regular_price: String((p as any).regular_price ?? ""),
       sale_price: ((p as any).sale_price ?? null) === "" ? null : ((p as any).sale_price ?? null),
       on_sale: Boolean((p as any).on_sale),
     },
+
     main_image: main
       ? {
           src: String(main.src ?? ""),
@@ -103,22 +120,23 @@ const toSummary = (p: Partial<WooProduct>): WooProductSummary => {
 export async function listarExcursionesWoo(
   query: WooProductQueryLite = {}
 ): Promise<WooListResponse<WooProductSummary[]>> {
-  // 👇 SIEMPRE publish
   const enforcedQuery: WooProductQueryLite = {
     ...query,
     status: "publish",
-    // 👇 campos mínimos que necesitas (ajusta a tu gusto)
-    fields: query.fields ?? [
-      "id",
-      "name",
-      "slug",
-      "permalink",
-      "price",
-      "regular_price",
-      "sale_price",
-      "on_sale",
-      "images",
-    ],
+    fields:
+      query.fields ??
+      [
+        "id",
+        "name",
+        "slug",
+        "permalink",
+        "price",
+        "regular_price",
+        "sale_price",
+        "on_sale",
+        "images",
+        "meta_data", // 👈 necesario para extraer video/horario
+      ],
   };
 
   const params = buildQueryParams(enforcedQuery);
