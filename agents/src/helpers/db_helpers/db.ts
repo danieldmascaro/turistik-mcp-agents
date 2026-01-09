@@ -1,45 +1,51 @@
-// db.ts
-import * as sql from "mssql";
+import sql from "mssql";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const config: sql.config = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  server: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT || 1433),
+  user: process.env.SQL_USER ?? "tu_usuario",
+  password: process.env.SQL_SECRET ?? "tu_password",
+  server: process.env.SQL_SERVER ?? "localhost",
+  database: process.env.SQL_DATABASE ?? "tu_db",
   options: {
     encrypt: true,
-    trustServerCertificate: true,
+    trustServerCertificate: true
   },
   pool: {
     max: 10,
     min: 0,
-    idleTimeoutMillis: 30000,
-  },
+    idleTimeoutMillis: 30000
+  }
 };
 
 let poolPromise: Promise<sql.ConnectionPool> | null = null;
+let poolInstance: sql.ConnectionPool | null = null;
 
-async function getPool(): Promise<sql.ConnectionPool> {
+export function getPool(): Promise<sql.ConnectionPool> {
   if (!poolPromise) {
-    poolPromise = sql.connect(config);
+    poolPromise = new sql.ConnectionPool(config)
+      .connect()
+      .then((pool) => {
+        poolInstance = pool;
+        console.log("Éo. Pool de SQL creado");
+        return pool;
+      })
+      .catch((err) => {
+        poolPromise = null;
+        console.error("É?O Error creando pool:", err);
+        throw err;
+      });
   }
   return poolPromise;
 }
 
-export async function query<T = any>(
-  text: string,
-  params: Record<string, unknown> = {}
-): Promise<T[]> {
-  const pool = await getPool();
-  const request = pool.request();
-
-  for (const [key, value] of Object.entries(params)) {
-    request.input(key, value as any); // m√≠nimo cambio (funciona)
+export async function closePool(): Promise<void> {
+  if (poolInstance) {
+    await poolInstance.close();
+    poolInstance = null;
+    poolPromise = null;
   }
-
-  const result = await request.query<T>(text);
-  return result.recordset;
 }
 
 export { sql };
