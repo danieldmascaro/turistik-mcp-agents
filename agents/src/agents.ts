@@ -34,7 +34,6 @@ const guardrailAgent = new Agent({
     "Revisa si la entrada del usuario contiene solicitudes inapropiadas o peligrosas. Además, verifica si es que el agente respondió en el mismo idioma que el usuario.",
   outputType: z.object({
     isDangerous: z.boolean(),
-    reasoning: z.string().max(20),
   }),
 });
 

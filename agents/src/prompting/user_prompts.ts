@@ -70,7 +70,7 @@ ${entrada}`;
 }
 
 export function formatHistorial(turnos: Turno[]): string {
-  // Formato simple y LLM-friendly
+
   return turnos
     .map(
       (t, i) =>
@@ -80,11 +80,7 @@ export function formatHistorial(turnos: Turno[]): string {
     .join("\n");
 }
 
-/**
- * Decide qué prompt devolver:
- * - Si history es null o vacío => prompt de saludo
- * - Si hay history => prompt normal con historial
- */
+
 export function buildPromptFromHistory(params: {
   entrada: string;
   history: Turno[] | null;

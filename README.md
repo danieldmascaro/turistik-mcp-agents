@@ -191,11 +191,3 @@ son claves para el correcto funcionamiento del servidor MCP.
 
 
 El valor principal no está en una implementación específica ni en un SDK puntual, sino en **la arquitectura, las abstracciones y el criterio aplicado al diseño de agentes y contextos**.
-
-# P.D:
-
-Asegurar la conexión del servidor MCP con la api para listar excursiones de Woocommerce. Agregar un campo al JSON, que incluya una categoría de excursión pensada exclusivamente para que el agente sea capaz de ofrecer solo los tours pertinentes a la conversación.
-En un plazo razonable, se estima que el sistema debería ser capaz de atender en turismo y cerro, derivar conversaciones entre ambos canales, evaluar y registrar internamente
-tanto la interacción de los agentes, como la interacción entre usuarios. Lo que podría derivar en un sistema que registre todas las veces que el agente NO FUE CAPAZ de resolver un problema POR SU CULPA, e ignorar las interacciones donde el usuario haya actuado indebidamente. 
-A su vez, el sistema debería ser capaz de derivar conversaciones a agentes humanos en caso de ser necesario. 
-Para utilizar todas las características nativas de los SDKs, considerar usar Postgres. 
