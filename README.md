@@ -157,10 +157,7 @@ El foco del proyecto no está en un lenguaje específico, sino en **las abstracc
 
 ## Próximos pasos
 
-El foco inmediato es **identificar casos de uso concretos y desarrollar agentes que automaticen procesos reales**.
-
-Las APIs de LLM introducen una nueva capa de abstracción: **el lenguaje natural**.  
-El desafío es reducir esa abstracción a componentes simples, observables y controlables, que puedan mapearse de forma confiable a acciones del sistema.
+Encontrar una forma de filtrar en woocommerce con los campos actuales, pero probablemente se tendrán que añadir tags para los productos.
 
 ---
 
