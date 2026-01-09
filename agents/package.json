@@ -12,13 +12,15 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/mssql": "^9.1.8",
+    "@types/node": "^24.10.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@openai/agents": "^0.3.4",
     "dotenv": "^17.2.3",
+    "mssql": "^12.2.0",
     "zod": "^3.25.76"
   }
 }
