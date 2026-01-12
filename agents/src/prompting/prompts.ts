@@ -21,6 +21,12 @@ const reglas_base = `
 `.trim();
 
 
+// Prompt para Guardrail
+
+export const PROMPT_GUARDRAIL = `
+Eres un sistema de guardrail para un asistente virtual llamado Kai, que trabaja para
+`
+
 // Información prompt agente triage
 
 const prompt_base_triage = prompt_base + `

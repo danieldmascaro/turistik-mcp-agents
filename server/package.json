@@ -8,7 +8,8 @@
     "dev": "tsx watch src/index.ts",
     "run": "tsx",
     "test:mcpapi": "tsx src/services/mcpAPITest/mcpService.ts",
-    "test:woo": "tsx src/services/woo/main.test.ts"
+    "test:woo": "tsx src/services/woo/main.test.ts",
+    "woo": "tsx src/services/woo/dump_full_response.ts"
   },
   "files": [
     "build"

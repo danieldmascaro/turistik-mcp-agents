@@ -55,7 +55,7 @@ function createMCPServer() {
     {
       title: "Listar Excursiones (WooCommerce)",
       description:
-        "Lista excursiones (productos Woo) filtrando por nombre y rango de precio.",
+        "Lista excursiones (productos Woo) filtrando por nombre y rango de precio. Aquí encontrarás Tours: gastronómicos, a la nieve, por el centro histórico de Santiago, al cerro san cristóbal (funicular y teleférico), al Litoral central, Casa de Neruda, Viñedos.",
       inputSchema: ListarExcursionesWooInputSchema,
       outputSchema: {
         data: z
