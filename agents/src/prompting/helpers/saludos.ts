@@ -1,15 +1,6 @@
 import { getSaludoKai } from "../common/user_prompts.js";
-import type { SaludoKey } from "../common/user_prompts.js";
+import type { SaludoHandlerParams, SaludoKai } from "../types.js";
 import { guardarInteraccion } from "../../helpers/user_memory/memory_helpers.js";
-
-
-type SaludoKai = ReturnType<typeof getSaludoKai>;
-
-interface SaludoHandlerParams {
-  comando: SaludoKey;
-  uid: string;
-  string_fecha_hora: string;
-}
 
 export async function saludoHandler({
   comando,

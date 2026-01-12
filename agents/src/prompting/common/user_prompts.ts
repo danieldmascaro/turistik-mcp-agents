@@ -1,4 +1,5 @@
 import { buildFechaBotSimple } from "../helpers/fecha.js";
+import type { BuildPromptFromHistoryParams, SaludoKey, Turno } from "../types.js";
 
 export const saludos_kai = {
   "#SaludoKaiV2ESP": [
@@ -32,10 +33,6 @@ export const saludos_kai = {
     "Olá, eu sou o Kai, assistente virtual da Turistik. Como posso te ajudar hoje? Se você estiver interessado em passeios ou nos ônibus Hop-On Hop-Off, ficarei feliz em te fornecer informações!",
   ],
 } as const;
-
-export type SaludoKey = keyof typeof saludos_kai;
-
-export type Turno = { mensaje_usuario: string; mensaje_bot: string };
 
 export function getSaludoKai(key: SaludoKey): {
   categoria: string;
@@ -81,10 +78,7 @@ export function formatHistorial(turnos: Turno[]): string {
 }
 
 
-export function buildPromptFromHistory(params: {
-  entrada: string;
-  history: Turno[] | null;
-}): string {
+export function buildPromptFromHistory(params: BuildPromptFromHistoryParams): string {
   const { entrada, history } = params;
 
   if (!history || history.length === 0) {

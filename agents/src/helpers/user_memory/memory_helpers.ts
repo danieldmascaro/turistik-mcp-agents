@@ -1,18 +1,20 @@
 // get_memory.ts
 import { sql, getPool } from "../db_helpers/db.js";
 import { buildPromptFromHistory } from "../../prompting/common/user_prompts.js";
-import type { Turno } from "../../prompting/common/user_prompts.js";
+import type { Turno } from "../../prompting/types.js";
+import type {
+  ArmarPromptParaAgenteParams,
+  GuardarInteraccionParams,
+} from "../types.js";
 
 /**
  * 1) Se llama ANTES del agente:
  * - Si el uid existe: trae últimos 10 y arma prompt con historial + entrada actual
  * - Si no existe: arma prompt de saludo (sin historial)
  */
-export async function armarPromptParaAgente(params: {
-  uid: string;
-  mensaje_usuario: string;
-  area_negocio: string;
-}): Promise<string> {
+export async function armarPromptParaAgente(
+  params: ArmarPromptParaAgenteParams
+): Promise<string> {
   const { uid, mensaje_usuario } = params;
 
   const pool = await getPool();
@@ -81,12 +83,9 @@ export async function borrarMemoriaUID(uid: string): Promise<void> {
 
 
 // Guardar interacciones
-export async function guardarInteraccion(params: {
-  uid: string;
-  mensaje_usuario: string;
-  mensaje_bot: string;
-  string_fecha_hora: string;
-}): Promise<void> {
+export async function guardarInteraccion(
+  params: GuardarInteraccionParams
+): Promise<void> {
   const { uid, mensaje_usuario, mensaje_bot, string_fecha_hora } = params;
 
   const pool = await getPool();
