@@ -5,7 +5,6 @@ import {
   run,
   hostedMcpTool,
   type InputGuardrail,
-  RunContext,
 } from "@openai/agents";
 import {
   PROMPT_KAI_TRIAGE,

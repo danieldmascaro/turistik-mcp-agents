@@ -4,6 +4,7 @@ import {
   run,
   InputGuardrailTripwireTriggered,
 } from "@openai/agents";
+import { saludoHandler } from "./prompting/helpers/saludos.js";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { buildFechaBotSimple } from "./prompting/helpers/fecha.js";
@@ -12,8 +13,9 @@ import { closePool } from "./helpers/db_helpers/db.js";
 
 
 
-export const userId = "Local Master MCP";
 
+export const userId = "Local Master MCP";
+const string_fecha_hora = buildFechaBotSimple();
 const rl = readline.createInterface({ input, output });
 export const userPrompt = await rl.question("Ingrese un prompt: ");
 rl.close();
@@ -25,12 +27,48 @@ async function main() {
     if (userPrompt.trim() === "#Reiniciar") {
     await borrarMemoriaUID(userId);
     console.log("Memoria reiniciada para el usuario:", userId);
-    return;
-  }
+    } else if (userPrompt.trim() === "#SaludoKaiV2ESP") {
+      await saludoHandler({
+        comando: "#SaludoKaiV2ESP",
+        uid: userId,
+        string_fecha_hora,
+      });
+    } else if (userPrompt.trim().startsWith("#SaludoKaiV2ENG")) {
+      await saludoHandler({
+        comando: "#SaludoKaiV2ENG",
+        uid: userId,
+        string_fecha_hora,
+      });
+    } else if (userPrompt.trim() === "#SaludoKaiV2POR") {
+      await saludoHandler({
+        comando: "#SaludoKaiV2POR",
+        uid: userId,
+        string_fecha_hora,
+      });
+    } else if (userPrompt.trim() === "#SaludoKaiV2ESPTOUR") {
+      await saludoHandler({
+        comando: "#SaludoKaiV2ESPTOUR",
+        uid: userId,
+        string_fecha_hora,
+      });
+    } else if (userPrompt.trim().startsWith("#SaludoKaiV2ENGTOUR")) {
+      await saludoHandler({
+        comando: "#SaludoKaiV2ENGTOUR",
+        uid: userId,
+        string_fecha_hora,
+      });
+    } else if (userPrompt.trim() === "#SaludoKaiV2PORTOUR") {
+      await saludoHandler({
+        comando: "#SaludoKaiV2PORTOUR",
+        uid: userId,
+        string_fecha_hora,
+      });
+    }
     // 1) Armar prompt CON historial (antes del run)
     const promptArmado = await armarPromptParaAgente({
       uid: userId,
       mensaje_usuario: userPrompt,
+      area_negocio: "turismo",
     });
 
     // 2) Correr agente con promptArmado
@@ -41,7 +79,6 @@ async function main() {
     console.log(respuestaBot);
 
     // 3) Guardar interacción (después del run)
-    const string_fecha_hora = buildFechaBotSimple();
 
     await guardarInteraccion({
       uid: userId,

@@ -1,4 +1,4 @@
-import { buildFechaBotSimple } from "./helpers/fecha.js";
+import { buildFechaBotSimple } from "../helpers/fecha.js";
 
 export const saludos_kai = {
   "#SaludoKaiV2ESP": [

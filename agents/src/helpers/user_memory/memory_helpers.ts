@@ -1,7 +1,7 @@
 // get_memory.ts
 import { sql, getPool } from "../db_helpers/db.js";
-import { buildPromptFromHistory } from "../../prompting/user_prompts.js";
-import type { Turno } from "../../prompting/user_prompts.js";
+import { buildPromptFromHistory } from "../../prompting/common/user_prompts.js";
+import type { Turno } from "../../prompting/common/user_prompts.js";
 
 /**
  * 1) Se llama ANTES del agente:
@@ -11,6 +11,7 @@ import type { Turno } from "../../prompting/user_prompts.js";
 export async function armarPromptParaAgente(params: {
   uid: string;
   mensaje_usuario: string;
+  area_negocio: string;
 }): Promise<string> {
   const { uid, mensaje_usuario } = params;
 
