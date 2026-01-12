@@ -84,3 +84,5 @@ export function buildFechaBotSimple(): string {
 
   return `${dd} de ${mes} de ${yyyy}. ${hh}:${mm} ${ampm}`;
 }
+
+export const fecha = buildFechaBotPrompt();

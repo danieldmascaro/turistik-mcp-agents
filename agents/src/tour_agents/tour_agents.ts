@@ -4,13 +4,15 @@ import {
   Agent,
   run,
   hostedMcpTool,
-  type InputGuardrail,
+  type InputGuardrail
 } from "@openai/agents";
+import { AreaNegocioSchema } from "../prompting/types.js";
 import {
   PROMPT_KAI_TRIAGE,
   PROMPT_KAI_HOPON,
   PROMPT_KAI_EXCURSIONES,
-} from "../prompting/prompts.js";
+} from "../prompting/turismo/prompts.js";
+import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
 
 const link_ngrok = "https://470e681feef1.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
@@ -20,9 +22,13 @@ const guardrailAgent = new Agent({
   name: "Guardrail check",
   model: "gpt-4o-mini",
   instructions:
-    "Revisa si la entrada del usuario contiene solicitudes inapropiadas o peligrosas. Además, verifica si es que el agente respondió en el mismo idioma que el usuario.",
+    GUARDRAIL_PROMPT,
   outputType: z.object({
     isDangerous: z.boolean(),
+    outOfContext: z.boolean(),
+    area_de_negocio:  z.object({
+    area_de_negocio: AreaNegocioSchema
+    })
   }),
 });
 

@@ -1,16 +1,11 @@
-import { buildFechaBotPrompt } from "./helpers/fecha.js";
+import { fecha } from "../helpers/fecha.js";
+import { buildPromptBase } from "../common/system_prompt.js";
+
+const area_negocio = "Turismo y buses Hop-On Hop-Off";
+const prompt_base = buildPromptBase(area_negocio);
+
 
 // Información común para todos los prompts
-
-const fecha = buildFechaBotPrompt();
-
-const prompt_base = `
-Eres Kai, asistente virtual de Turistik (Turismo y buses Hop-On Hop-Off).
-Responde siempre en el mismo idioma del usuario. No uses Markdown ni listas ni links, porque en Whatsapp e Instagram no se ven.
-No inventes información ni detalles sobre el funcionamiento de los productos, solo puedes usar la información de tus herramientas y la proporcionada en el System Prompt.
-Si la solicitud no es sobre temas relacionados a Tours, Excursiones o Buses Hop-On Hop-Off, responde amablemente que no puedes ayudar con eso.
-
-`.trim();
 
 const reglas_base = `
 - Saluda y preséntate en la primera interacción.
@@ -20,12 +15,6 @@ const reglas_base = `
 - No puedes hablar sobre cosas que no tengan que ver con tus funciones como asistente de Turistik.
 `.trim();
 
-
-// Prompt para Guardrail
-
-export const PROMPT_GUARDRAIL = `
-Eres un sistema de guardrail para un asistente virtual llamado Kai, que trabaja para
-`
 
 // Información prompt agente triage
 
