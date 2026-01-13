@@ -7,13 +7,35 @@ export type WooListProductsQuery = {
   max_price?: number;
 };
 
+const EmptyToUndefined = z
+  .string()
+  .trim()
+  .transform((v) => (v === "" ? undefined : v));
+
+const Precio = z.coerce.number().finite();
+
+export const text = (t: string) => ({ type: "text", text: t } as const);
+
 export const ListarExcursionesWooInputSchema = z.object({
-  consulta: z.object({
-    nombre: z.string().describe("Nombre del tour/excursión (texto libre).").default(""),
-    precio_min: z.number().describe("Precio mínimo.").default(0),
-    precio_max: z.number().describe("Precio máximo.").default(999999),
-  }),
+  consulta: z
+    .object({
+      nombre: EmptyToUndefined.optional(),
+      precio_min: Precio.min(0).default(0),
+      precio_max: Precio.min(0).max(999999).default(0),
+    })
+    .superRefine((val, ctx) => {
+      // Validación lógica: solo si ambos precios están presentes (>0)
+      if (val.precio_min > 0 && val.precio_max > 0 && val.precio_min > val.precio_max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "precio_min no puede ser mayor que precio_max",
+          path: ["precio_min"],
+        });
+      }
+    }),
 });
+
+export type ListarExcursionesWooInput = z.infer<typeof ListarExcursionesWooInputSchema>;
 
 export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
   Partial<T> & { [K in Keys]-?: Required<Pick<T, K>> }[Keys]

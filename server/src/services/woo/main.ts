@@ -180,3 +180,16 @@ export async function listarExcursionesWoo(
     pagination: { total, totalPages },
   };
 }
+
+export async function obtenerExcursionWooPorId(
+  id: number
+): Promise<WooProductSummary | null> {
+  const { data } = await listarExcursionesWoo({
+    include: [id],
+    // opcional: no traer más de 1
+    per_page: 1,
+  });
+
+  // Woo debería devolver 0 o 1 elemento con include + per_page:1
+  return data[0] ?? null;
+}

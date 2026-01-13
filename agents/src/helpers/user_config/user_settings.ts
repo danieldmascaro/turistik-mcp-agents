@@ -64,6 +64,46 @@ export async function armarPromptParaAgente(
   }
 }
 
+export async function getAreaNegocio(uid: string): Promise<string | null> {
+  if (!uid || typeof uid !== "string" || !uid.trim()) {
+    throw new Error("uid inválido");
+  }
+
+  const pool = await getPool();
+  const request = pool.request();
+  request.input("uid", uid);
+
+  const result = await request.query<{ agente: string | null }>(`
+    SELECT agente
+    FROM ia.usuario_web
+    WHERE uid = @uid;
+  `) as any;
+  if (result.recordset.length === 0) {
+    return "Turismo";
+  }
+  return result.recordset[0].agente || null;
+}
+
+export async function setAreaNegocio(uid: string, area_negocio: string): Promise<void> {
+  if (!uid || typeof uid !== "string" || !uid.trim()) {
+    throw new Error("uid inválido");
+  }
+
+  const pool = await getPool();
+  const request = pool.request();
+
+  request.input("uid", uid);
+  request.input("area_negocio", area_negocio);
+
+  await request.query(`
+    UPDATE ia.usuario_web
+    SET agente = @area_negocio
+    WHERE uid = @uid;
+  `);
+}
+
+
+
 // Borrar memoria persistente asociada a un uid
 export async function borrarMemoriaUID(uid: string): Promise<void> {
   if (!uid || typeof uid !== "string" || !uid.trim()) {

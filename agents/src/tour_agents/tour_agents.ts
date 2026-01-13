@@ -13,8 +13,9 @@ import {
   PROMPT_KAI_EXCURSIONES,
 } from "../prompting/turismo/prompts.js";
 import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
+import { setAreaNegocio } from "../helpers/user_config/user_settings.js";
 
-const link_ngrok = "https://470e681feef1.ngrok-free.app/mcp";
+const link_ngrok = "https://7b4eab782e5b.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
 
 
@@ -32,7 +33,7 @@ const guardrailAgent = new Agent({
   }),
 });
 
-const guardrail: InputGuardrail = {
+export const guardrail: InputGuardrail = {
   name: "Guardrail check",
   runInParallel: false,
   execute: async ({ input, context }) => {
@@ -43,12 +44,15 @@ const guardrail: InputGuardrail = {
 
     const userId = contexto.userId ?? "unknown";
     const userPrompt = contexto.userPrompt ?? (typeof input === "string" ? input : JSON.stringify(input));
-
+    await setAreaNegocio(
+      userId,
+      result.finalOutput?.area_de_negocio.area_de_negocio || ""
+    );
     await registroLogs("Guardrail", userPrompt, userId);
 
     return {
       outputInfo: result.finalOutput,
-      tripwireTriggered: result.finalOutput?.isDangerous === true,
+      tripwireTriggered: result.finalOutput?.isDangerous === true || result.finalOutput?.outOfContext === true,
     };
   },
 };

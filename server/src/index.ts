@@ -5,50 +5,98 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { listarExcursionesWoo } from "./services/woo/main.js";
-import type { WooListProductsQuery } from "./types.js";
+import { listarExcursionesWoo, obtenerExcursionWooPorId } from "./services/woo/main.js";
+import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcursionesWooInputSchema, text } from "./types.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-/**
- * Helpers
- */
-const text = (t: string) => ({ type: "text", text: t } as const);
 
-type ListarExcursionesWooInput = z.infer<typeof ListarExcursionesWooInputSchema>;
+// 1. Obtener la ruta del archivo actual
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const EmptyToUndefined = z
-  .string()
-  .trim()
-  .transform((v) => (v === "" ? undefined : v));
+// 2. Construir la ruta absoluta subiendo 2 niveles (de src a server, luego a raíz)
+const pathJS = path.resolve(__dirname, '../../front/teleferico_tours/dist/assets/index.js');
+const pathCSS = path.resolve(__dirname, '../../front/teleferico_tours/dist/assets/index.css');
 
-const Precio = z.coerce.number().finite();
+// 3. Leer los archivos
+const BUSCAR_TOUR_JS = readFileSync(pathJS, "utf-8");
+const BUSCAR_TOUR_CSS = readFileSync(pathCSS, "utf-8");
 
-export const ListarExcursionesWooInputSchema = z.object({
-  consulta: z
-    .object({
-      nombre: EmptyToUndefined.optional(),
-      precio_min: Precio.min(0).default(0),
-      precio_max: Precio.min(0).max(999999).default(0),
-    })
-    .superRefine((val, ctx) => {
-      // Validación lógica: solo si ambos precios están presentes (>0)
-      if (val.precio_min > 0 && val.precio_max > 0 && val.precio_min > val.precio_max) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "precio_min no puede ser mayor que precio_max",
-          path: ["precio_min"],
-        });
-      }
-    }),
-});
+const HTML_TEMPLATE =
+  `<div id="root-carrusel" class="max-h-full max-w-full min-h-full max-h-full"></div>\n` +
+  `<script type="module">${BUSCAR_TOUR_JS}</script>\n` +
+  `<style>${BUSCAR_TOUR_CSS}</style>\n`;
 
 
 
-
+// Configuración del MCP Server
 function createMCPServer() {
   const server = new McpServer({
     name: "Turistik MCP Server",
     version: "0.0.1",
   });
+  server.registerResource("html", "ui://widget/carrusel_tours.html", {}, async () => ({
+    contents: [
+      {
+        uri: "ui://widget/carrusel_tours.html",
+        mimeType: "text/html",
+        text: HTML_TEMPLATE,
+        _meta: {
+          "openai/widgetDescription": "Utiliza esta herramienta para buscar tours de acuerdo a las preferencias del usuario. Los precios están en CLP, pesos chilenos.",
+        },
+      },
+    ],
+  }));
+server.registerTool(
+  "WooPorId",
+  {
+    title: "Obtener datos básicos servicio.",
+    description: "Obtiene un producto WooCommerce por su ID.",
+    inputSchema: z.object({
+      id: z
+        .number()
+        .describe("ID que debes ingresar para obtener los datos de tu producto."),
+    }),
+  },
+  async ({ id }: { id: number }) => {
+    try {
+      const data = await obtenerExcursionWooPorId(id);
+      return {
+        content: [text(JSON.stringify(data, null, 2))],
+        structuredContent: { data },
+      };
+    } catch (err: any) {
+      const status =
+        typeof err?.status === "number"
+          ? err.status
+          : typeof err?.response?.status === "number"
+            ? err.response.status
+            : undefined;
+
+      const payloadErr = err?.payload ?? err?.response?.data ?? undefined;
+
+      const message =
+        typeof err?.message === "string"
+          ? err.message
+          : "Error desconocido llamando obtenerExcursionWooPorId";
+
+      return {
+        content: [
+          text(
+            `❌ Falló obtenerExcursionWooPorId${
+              status ? ` (status ${status})` : ""
+            }: ${message}`
+          ),
+        ],
+        structuredContent: {
+          data: { error: "API_ERROR", status, message, payload: payloadErr },
+        },
+      };
+    }
+  }
+);
 
   server.registerTool(
     "ListarExcursionesWoo",
@@ -61,6 +109,12 @@ function createMCPServer() {
         data: z
           .unknown()
           .describe("JSON devuelto por Woo: { data: WooProduct[], pagination: { total, totalPages } }."),
+      },
+      _meta: {
+        "openai/outputTemplate": "ui://widget/carrusel_tours.html",
+        "openai/widgetAccesible": true,
+        "openai/toolInvocation/invoking": "Cargando Tours...",
+        "openai/toolInvocation/invoked": "Tours cargados exitosamente.",
       },
     },
     async ({ consulta }: ListarExcursionesWooInput) => {
@@ -146,8 +200,8 @@ function createMCPServer() {
         structuredContent: { data: { error: "API_ERROR", status, message, payload: payloadErr } },
       };
     }
-  }
-);
+    }
+    );
 
   return server;
 }
