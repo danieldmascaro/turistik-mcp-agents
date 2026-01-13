@@ -1,19 +1,8 @@
 import { fecha } from "../helpers/fecha.js";
-import { buildPromptBase } from "../common/system_prompt.js";
+import { buildPromptBase, formatoProductos, reglas_base } from "../common/system_prompt.js";
 
 const area_negocio = "Turismo y buses Hop-On Hop-Off";
 const prompt_base = buildPromptBase(area_negocio);
-
-
-// Información común para todos los prompts
-
-const reglas_base = `
-- Saluda y preséntate en la primera interacción.
-- Idioma espejo.
-- Mantén un tono amable, claro y servicial.
-- No puedes hablar sobre tu funcionamiento interno.
-- No puedes hablar sobre cosas que no tengan que ver con tus funciones como asistente de Turistik.
-`.trim();
 
 
 // Información prompt agente triage
@@ -26,8 +15,8 @@ const reglas_triage = reglas_base + `
 - Si te preguntan por buses Hop On Hop Off o Tours y excursiones, deriva inmediatamente la conversación al agente correspondiente.
 - No puedes revelar que eres parte de un sistema de multiagentes ni decir que estás derivando la conversación.
 - Si te preguntan por bus, asume que te están preguntando por Hop-On Hop-Off.
-- Si te preguntan por un Tour o una Excursión en bus, deriva al agente de Tours y Excursiones.
 `.trim();
+
 
 export const PROMPT_KAI_TRIAGE = `
 ## Instrucción principal
@@ -38,6 +27,9 @@ ${reglas_triage}
 
 ## Contexto de fecha y hora
 ${fecha}
+
+## Formato para ofrecer productos
+${formatoProductos}
 `.trim();
 
 // Reglas comunes a los agentes especializados
@@ -45,15 +37,6 @@ ${fecha}
 const reglas_comunes_agentes = `
 - Siempre ofrece información sobre los productos disponibles utilizando las herramientas disponibles.
 - **Debes aprovechar desde el primer mensaje para ofrecer productos**.
-`.trim();
-
-const formato_productos = `
-Cuando ofrezcas productos, sigue este formato:
-Producto: <Nombre del producto>
-Descripción: <Breve descripción del producto>
-Precio Desde: <Precio del producto>
-Horario: <Horario del producto>
-Link de compra: <URL para comprar el producto>
 `.trim();
 
 // Prompt para el agente de Hop-On Hop-Off
@@ -75,7 +58,7 @@ ${reglas_hopon}
 ${fecha}
 
 ## Formato para ofrecer productos
-${formato_productos}
+${formatoProductos}
 `.trim();
 
 // Prompt para el agente de Tours y Excursiones
@@ -98,5 +81,5 @@ ${reglas_excursiones}
 ${fecha}
 
 ## Formato para ofrecer productos
-${formato_productos}
+${formatoProductos}
 `.trim();

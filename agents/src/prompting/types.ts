@@ -3,17 +3,17 @@ import z from "zod";
 
 export const saludos_kai = {
   "#SaludoKaiV2ESP": [
-    "Parquemet",
+    "ParqueMet",
     "Hola Kai",
     "Hola, soy Kai, el asistente virtual de Turistik. ¿En qué puedo ayudarte hoy?",
   ],
   "#SaludoKaiV2ENG": [
-    "Parquemet",
+    "ParqueMet",
     "Hi Kai, can you assist me?",
     "Hi there! I'm Kai, your virtual assistant from Turistik. How can I help you today?",
   ],
   "#SaludoKaiV2POR": [
-    "Parquemet",
+    "ParqueMet",
     "Olá, você pode me ajudar?",
     "Olá! Eu sou Kai, o assistente virtual da Turistik. Como posso te ajudar hoje?",
   ],
@@ -41,21 +41,27 @@ export type SaludoKai = ReturnType<
 typeof import("./common/user_prompts.js").getSaludoKai
 >;
 
+// Cambio de área de negocio
+
+export const AREA_NEGOCIO_CHOICES = ["ParqueMet", "Turismo"] as const;
+export const AreaNegocioSchema = z.enum(AREA_NEGOCIO_CHOICES);
+export type AreaNegocio = z.infer<typeof AreaNegocioSchema>;
+
+export const GuardrailOutputSchema = z.object({
+  isDangerous: z.boolean(),
+  outOfContext: z.boolean(),
+  area_de_negocio: AreaNegocioSchema,
+  comentario: z.string().describe("Argumentación de los parámetros elegidos"),
+});
+
+export interface CambioAreaNegocio {
+  nuevaArea: AreaNegocio;
+}
 export interface SaludoHandlerParams {
   comando: SaludoKey;
   uid: string;
   string_fecha_hora: string;
-}
-// Cambio de área de negocio
-
-export const AREA_NEGOCIO_CHOICES = ["ParqueMet", "Turismo"] as const;
-
-export type AreaNegocio = (typeof AREA_NEGOCIO_CHOICES)[number];
-
-export const AreaNegocioSchema = z.enum(AREA_NEGOCIO_CHOICES);
-
-export interface CambioAreaNegocio {
-  nuevaArea: AreaNegocio;
+  areaNegocio: AreaNegocio;
 }
 
 // Si querés el schema del payload completo:

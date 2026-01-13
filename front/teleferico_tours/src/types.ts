@@ -1,8 +1,43 @@
-import { z } from "zod";
+﻿// Shared types for the widget runtime.
+
+export type UnknownObject = Record<string, unknown>;
+
+export type WooProductSummary = {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  video: string | null;
+  horario: unknown | null;
+  prices: {
+    price: string;
+    regular_price: string;
+    sale_price: string | null;
+    on_sale: boolean;
+  };
+  main_image: { src: string; thumbnail?: string; alt?: string } | null;
+};
+
+export type WooListResponse<T> = {
+  data: T;
+  pagination: { total: number; totalPages: number };
+};
+
+export type ListarExcursionesWooInput = {
+  consulta: {
+    nombre?: string;
+    precio_min?: number;
+    precio_max?: number;
+  };
+};
+
+export type ToolOutput = {
+  data?: WooListResponse<WooProductSummary[]>;
+};
 
 export type OpenAiGlobals<
-  ToolInput = UnknownObject,
-  ToolOutput = UnknownObject,
+  ToolInput = ListarExcursionesWooInput,
+  ToolOutputType = ToolOutput,
   ToolResponseMetadata = UnknownObject,
   WidgetState = UnknownObject
 > = {
@@ -19,7 +54,7 @@ export type OpenAiGlobals<
 
   // state
   toolInput: ToolInput;
-  toolOutput: ToolOutput | null;
+  toolOutput: ToolOutputType | null;
   toolResponseMetadata: ToolResponseMetadata | null;
   widgetState: WidgetState | null;
   setWidgetState: (state: WidgetState) => Promise<void>;
@@ -36,8 +71,6 @@ type API = {
   requestDisplayMode: RequestDisplayMode;
 };
 
-export type UnknownObject = Record<string, unknown>;
-
 export type Theme = "light" | "dark";
 
 export type SafeAreaInsets = {
@@ -49,87 +82,6 @@ export type SafeAreaInsets = {
 
 export type SafeArea = {
   insets: SafeAreaInsets;
-};
-
-export type Categoria =
-  | "Ciudad"
-  | "Cultura"
-  | "Historia"
-  | "Naturaleza"
-  | "Aventura"
-  | "Nieve"
-  | "Vino"
-  | "Gastronomía"
-  | "Litoral"
-  | "Familia"
-  | "Niños"
-  | "Diversión"
-  | "Bienestar"
-  | "Romántico"
-  | "Paisajes"
-  | "Neruda"
-  | "Poesía"
-  | "Montaña"
-  | "Ecología"
-  | "Educativo"
-  | "Experiencial"
-  | "Cerro San Cristóbal"
-  | "Teleférico"
-  | "Funicular"
-  | "Plaza de Armas";
-
-export type TourData = {
-  nombre: string;
-  precio: number;
-  precio2: number;
-  descripcion: string;
-  img_url: string;
-  link: string;
-  sub_area: string;
-  categorias: [];
-}
-
-export type WooData = {
-    tours: TourData[];
-};
-
-export const CategoriaSchema = z.object({
-  nombre: z.enum([
-    "Ciudad",
-    "Cultura",
-    "Historia",
-    "Naturaleza",
-    "Aventura",
-    "Nieve",
-    "Vino",
-    "Gastronomía",
-    "Litoral",
-    "Familia",
-    "Niños",
-    "Diversión",
-    "Bienestar",
-    "Romántico",
-    "Paisajes",
-    "Neruda",
-    "Poesía",
-    "Montaña",
-    "Ecología",
-    "Educativo",
-    "Experiencial",
-    "Cerro San Cristóbal",
-    "Teleférico",
-    "Funicular",
-    "Plaza de Armas",
-  ]).describe(
-    "Nombre de la categoría, por ejemplo: aventura, cultura, gastronomía, etc."
-  ),
-});
-
-export type Consulta = {
-  nombre: string;
-  precio_min: number;
-  precio_max: number;
-  palabras_clave: Categoria[];
 };
 
 export type DeviceType = "mobile" | "tablet" | "desktop" | "unknown";
@@ -176,20 +128,7 @@ export class SetGlobalsEvent extends CustomEvent<{
 declare global {
   interface Window {
     openai: (API & OpenAiGlobals) & {
-      toolOutput?: {
-        data?: {
-          consulta?: { nombre: string; precio: number; palabras_clave: number[] };
-          wooData?: Array<{
-            nombre: string;
-            precio: number;
-            precio2: number;
-            descripcion: string;
-            categorias: Categoria[];
-            imagen: string;
-            link: string;
-          }>;
-        };
-      };
+      toolOutput?: ToolOutput;
     };
   }
 

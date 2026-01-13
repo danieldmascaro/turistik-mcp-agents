@@ -6,7 +6,7 @@ import {
   hostedMcpTool,
   type InputGuardrail
 } from "@openai/agents";
-import { AreaNegocioSchema } from "../prompting/types.js";
+import { GuardrailOutputSchema } from "../prompting/types.js";
 import {
   PROMPT_KAI_TRIAGE,
   PROMPT_KAI_HOPON,
@@ -24,14 +24,10 @@ const guardrailAgent = new Agent({
   model: "gpt-4o-mini",
   instructions:
     GUARDRAIL_PROMPT,
-  outputType: z.object({
-    isDangerous: z.boolean(),
-    outOfContext: z.boolean(),
-    area_de_negocio:  z.object({
-    area_de_negocio: AreaNegocioSchema
-    })
-  }),
+  outputType: GuardrailOutputSchema
 });
+
+
 
 export const guardrail: InputGuardrail = {
   name: "Guardrail check",
@@ -46,7 +42,7 @@ export const guardrail: InputGuardrail = {
     const userPrompt = contexto.userPrompt ?? (typeof input === "string" ? input : JSON.stringify(input));
     await setAreaNegocio(
       userId,
-      result.finalOutput?.area_de_negocio.area_de_negocio || ""
+      result.finalOutput?.area_de_negocio || ""
     );
     await registroLogs("Guardrail", userPrompt, userId);
 
@@ -97,7 +93,7 @@ const toursExcursionesAgentAsTool = excursionesAgent.asTool({
 
 // Agente Triage
 
-export const triageAgent = Agent.create({
+export const triageAgentTurismo = Agent.create({
   name: "Agente principal",
   instructions: PROMPT_KAI_TRIAGE,
   model: model,

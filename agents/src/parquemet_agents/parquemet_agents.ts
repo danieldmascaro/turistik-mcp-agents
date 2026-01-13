@@ -1,9 +1,7 @@
 import z from "zod";
 import {
   Agent,
-  run,
   hostedMcpTool,
-  type InputGuardrail
 } from "@openai/agents";
 import { guardrail } from "../tour_agents/tour_agents.js";
 
@@ -27,8 +25,6 @@ const telefericoAgent = new Agent({
 export const triageAgentCerro = Agent.create({
   name: "Triage Agent",
   model: model,
+  instructions: "agente en construcción",
   inputGuardrails: [guardrail],
-    instructions: `
-      En construcción.
-    `
 });

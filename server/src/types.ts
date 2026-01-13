@@ -7,6 +7,8 @@ export type WooListProductsQuery = {
   max_price?: number;
 };
 
+export type IdWooValues = 54942 | 39546 | 44883 | 43203;
+
 const EmptyToUndefined = z
   .string()
   .trim()

@@ -1,4 +1,4 @@
-// get_memory.ts
+// Configuración y memoria de usuario
 import { sql, getPool } from "../db_helpers/db.js";
 import { buildPromptFromHistory } from "../../prompting/common/user_prompts.js";
 import type { Turno } from "../../prompting/types.js";
@@ -7,11 +7,7 @@ import type {
   GuardarInteraccionParams,
 } from "../types.js";
 
-/**
- * 1) Se llama ANTES del agente:
- * - Si el uid existe: trae últimos 10 y arma prompt con historial + entrada actual
- * - Si no existe: arma prompt de saludo (sin historial)
- */
+
 export async function armarPromptParaAgente(
   params: ArmarPromptParaAgenteParams
 ): Promise<string> {
@@ -126,7 +122,7 @@ export async function borrarMemoriaUID(uid: string): Promise<void> {
 export async function guardarInteraccion(
   params: GuardarInteraccionParams
 ): Promise<void> {
-  const { uid, mensaje_usuario, mensaje_bot, string_fecha_hora } = params;
+  const { uid, mensaje_usuario, mensaje_bot, string_fecha_hora, areaNegocio } = params;
 
   const pool = await getPool();
   const tx = new sql.Transaction(pool);
@@ -160,9 +156,10 @@ export async function guardarInteraccion(
       .input("uid", uid)
       .input("mensaje_usuario", mensaje_usuario)
       .input("mensaje_bot", mensaje_bot)
+      .input("area", areaNegocio )
       .query(`
-        INSERT INTO ia.memoria_corta (uid, mensaje_usuario, mensaje_bot)
-        VALUES (@uid, @mensaje_usuario, @mensaje_bot);
+        INSERT INTO ia.memoria_corta (uid, mensaje_usuario, mensaje_bot, area)
+        VALUES (@uid, @mensaje_usuario, @mensaje_bot, @area);
       `);
 
     // Insert memoria_persistente
@@ -171,9 +168,10 @@ export async function guardarInteraccion(
       .input("mensaje_usuario", mensaje_usuario)
       .input("mensaje_bot", mensaje_bot)
       .input("string_fecha_hora", string_fecha_hora)
+      .input("area", areaNegocio )
       .query(`
-        INSERT INTO ia.memoria_persistente (uid, mensaje_usuario, mensaje_bot, string_fecha_hora)
-        VALUES (@uid, @mensaje_usuario, @mensaje_bot, @string_fecha_hora);
+        INSERT INTO ia.memoria_persistente (uid, mensaje_usuario, mensaje_bot, string_fecha_hora, area)
+        VALUES (@uid, @mensaje_usuario, @mensaje_bot, @string_fecha_hora, @area);
       `);
 
     await tx.commit();

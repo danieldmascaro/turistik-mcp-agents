@@ -1,9 +1,15 @@
-﻿import type { TourData } from "../types";
+﻿import type { WooProductSummary } from "../types";
 import Button from "./Button";
 
-export default function TarjetaTour({ item }: { item: TourData }) {
+export default function TarjetaTour({ item }: { item: WooProductSummary }) {
+  const toNumber = (value?: string | null) => {
+    if (value == null || value === "") return undefined;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : undefined;
+  };
+
   const formatPrice = (price: number | undefined) => {
-    if (!price) return null;
+    if (price == null) return null;
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
       currency: "CLP",
@@ -11,30 +17,23 @@ export default function TarjetaTour({ item }: { item: TourData }) {
     }).format(price);
   };
 
-  // ✅ Decodifica correctamente las entidades HTML
-  const sanitizeText = (text?: string) => {
-    if (!text) return "";
-    const parser = new DOMParser();
-    const decoded = parser.parseFromString(text, "text/html").documentElement.textContent;
-    return decoded || "";
-  };
+  const salePrice = toNumber(item.prices.sale_price);
+  const currentPrice = toNumber(item.prices.price);
+  const regularPrice = toNumber(item.prices.regular_price);
 
-  const precioFinal = formatPrice(item.precio);
-  const precioOriginal = formatPrice(item.precio2);
+  const precioFinal = formatPrice(salePrice ?? currentPrice);
+  const precioOriginal = formatPrice(salePrice ? regularPrice : undefined);
 
   const handleCardClick = () => {
-    if (
-      !window.openai?.toolOutput?.data?.wooData ||
-      typeof window.openai.sendFollowUpMessage !== "function"
-    ) {
+    if (!window.openai?.toolOutput?.data || typeof window.openai.sendFollowUpMessage !== "function") {
       return;
     }
 
     const promptParts = [
-      `El cliente se interesó en el tour "${item.nombre}".`,
+      `El cliente se intereso en el tour "${item.name}".`,
       precioFinal ? `Precio actual: ${precioFinal}.` : null,
-      item.descripcion ? `Descripción: ${sanitizeText(item.descripcion)}` : null,
-      "Busca más información relevante sobre este tour e informa al cliente. Arma actividades e intenta enriquecer la información con links de atracciones relacionadas al tour. Para esta respuesta no vuelvas a llamar a la herramienta buscar_tours, solo da respuesta en texto. No agregues opciones ni mejoras, ni información que no aparezca en los medios oficiales de Turistik.",
+      item.permalink ? `Link oficial: ${item.permalink}.` : null,
+      "Busca mas informacion relevante sobre este tour e informa al cliente. Arma actividades e intenta enriquecer la informacion con links de atracciones relacionadas al tour. Para esta respuesta no vuelvas a llamar a ListarExcursionesWoo ni ListarBusHopOnHopOffWoo, solo da respuesta en texto. No agregues opciones ni mejoras, ni informacion que no aparezca en los medios oficiales de Turistik.",
     ];
 
     window.openai.sendFollowUpMessage({
@@ -48,7 +47,7 @@ export default function TarjetaTour({ item }: { item: TourData }) {
       <button
         onClick={handleCardClick}
         className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-white rounded-full p-1 shadow-md transition-all"
-        title="Enviar información al cliente vía OpenAI"
+        title="Enviar informacion al cliente via OpenAI"
       >
         <img
           src="https://assets.streamlinehq.com/image/private/w_240,h_240,ar_1/f_auto/v1/icons/technology/openai-1-52byx68uubjcpomdj4pmhq.png/openai-1-5u0onpsnpplsd0el4s93im.png?_a=DATAg1AAZAA0"
@@ -59,29 +58,23 @@ export default function TarjetaTour({ item }: { item: TourData }) {
 
       {/* Imagen */}
       <div className="relative overflow-hidden h-48">
-        <img
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          src={item.img_url}
-          alt={`Imagen del tour ${item.nombre}`}
-        />
-        {item.sub_area && (
-          <div className="absolute bottom-2 left-2 bg-white/90 text-red-600 text-xs font-semibold px-2 py-1 rounded">
-            {item.sub_area}
-          </div>
+        {item.main_image?.src ? (
+          <img
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            src={item.main_image.src}
+            alt={item.main_image.alt ?? `Imagen del tour ${item.name}`}
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100" />
         )}
       </div>
 
       {/* Texto */}
       <div className="flex-1 flex flex-col justify-between p-5 font-light">
-        <h3 className="md:text-base sm:text-sm font-bold mb-2 line-clamp-2">
-          {item.nombre}
-        </h3>
-        <p className="text-gray-600 text-xs line-clamp-5">
-          {sanitizeText(sanitizeText(item.descripcion))}
-        </p>
+        <h3 className="md:text-base sm:text-sm font-bold mb-2 line-clamp-2">{item.name}</h3>
       </div>
 
-      {/* Precio y botón */}
+      {/* Precio y boton */}
       <div className="border-t border-gray-100 p-3 flex flex-col justify-between gap-2 mt-auto">
         <div className="flex flex-col items-start text-left">
           <p className="text-gray-600 sm:text-sm md:text-2xl">Desde</p>
@@ -93,10 +86,10 @@ export default function TarjetaTour({ item }: { item: TourData }) {
           )}
         </div>
 
-        {item.link && (
+        {item.permalink && (
           <Button
             as="a"
-            href={item.link}
+            href={item.permalink}
             target="_blank"
             rel="noopener noreferrer"
             variant="danger"

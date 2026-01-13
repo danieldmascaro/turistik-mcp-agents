@@ -1,11 +1,11 @@
 import TarjetaTour from "./TarjetaTour";
-import type { WooData, TourData } from "../types";
+import type { WooProductSummary } from "../types";
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SlideTarjetasProps {
-  wooData: WooData[];
+  wooData: WooProductSummary[];
 }
 
 export default function SlideTarjetas({ wooData }: SlideTarjetasProps) {
@@ -19,7 +19,7 @@ export default function SlideTarjetas({ wooData }: SlideTarjetasProps) {
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
-  const allTours: TourData[] = wooData as unknown as TourData[];
+  const allTours = wooData;
 
   // ✅ Definir ancho dinámico según cantidad de tarjetas
   const getCardWidthClass = () => {
@@ -36,8 +36,8 @@ export default function SlideTarjetas({ wooData }: SlideTarjetasProps) {
     <div className="relative w-full max-w-7xl mx-auto py-6 px-6">
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-6 px-2 p-4">
-          {allTours.map((tour: TourData, index: number) => (
-            <div key={tour.nombre || index} className={getCardWidthClass()}>
+          {allTours.map((tour, index: number) => (
+            <div key={tour.id ?? tour.name ?? index} className={getCardWidthClass()}>
               <TarjetaTour item={tour} />
             </div>
           ))}

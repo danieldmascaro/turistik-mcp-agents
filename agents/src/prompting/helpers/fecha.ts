@@ -1,5 +1,3 @@
-// fechaBotPrompt.ts
-
 const TZ = "America/Santiago";
 
 const DATE_FMT = new Intl.DateTimeFormat("es-CL", {
@@ -31,7 +29,6 @@ const get = (
 
 const cap1 = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-// ✅ Capitaliza cada palabra (Enero, Febrero, etc.)
 const titleCase = (s: string): string =>
   s
     .split(" ")
@@ -39,7 +36,7 @@ const titleCase = (s: string): string =>
     .map((w) => cap1(w))
     .join(" ");
 
-export function buildFechaBotPrompt(): string {
+function buildFechaBotPrompt(): string {
   const now = new Date();
 
   const annio_actual = now.getFullYear();
@@ -68,7 +65,7 @@ export function buildFechaBotPrompt(): string {
 }
 
 
-export function buildFechaBotSimple(): string {
+function buildFechaBotSimple(): string {
   const now = new Date();
 
   const dateParts = DATE_FMT.formatToParts(now);
@@ -85,4 +82,5 @@ export function buildFechaBotSimple(): string {
   return `${dd} de ${mes} de ${yyyy}. ${hh}:${mm} ${ampm}`;
 }
 
+export const string_fecha_hora = buildFechaBotSimple();
 export const fecha = buildFechaBotPrompt();

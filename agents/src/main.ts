@@ -1,23 +1,21 @@
 import "dotenv/config";
-import { triageAgent } from "./tour_agents/tour_agents.js";
+import { triageAgentTurismo } from "./tour_agents/tour_agents.js";
+import { triageAgentCerro } from "./parquemet_agents/parquemet_agents.js";
 import {
   run,
   InputGuardrailTripwireTriggered,
 } from "@openai/agents";
-import { saludoHandler } from "./prompting/helpers/saludos.js";
+import { comandoSaludoHandler } from "./prompting/helpers/saludos.js";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { buildFechaBotSimple } from "./prompting/helpers/fecha.js";
 import { armarPromptParaAgente, guardarInteraccion, borrarMemoriaUID, getAreaNegocio } from "./helpers/user_config/user_settings.js";
 import { closePool } from "./helpers/db_helpers/db.js";
+import type { AreaNegocio } from "./prompting/types.js";
+import { string_fecha_hora } from "./prompting/helpers/fecha.js";
 
-
-
-
-
-
+// User Id y Prompt desde consola
 const userId = "Local Master MCP";
-const string_fecha_hora = buildFechaBotSimple();
+const areaNegocio = await getAreaNegocio(userId) as AreaNegocio;
 const rl = readline.createInterface({ input, output });
 const userPrompt = await rl.question("Ingrese un prompt: ");
 rl.close();
@@ -27,80 +25,50 @@ rl.close();
 async function main() {
   try {
     if (userPrompt.trim() === "#Reiniciar") {
-    await borrarMemoriaUID(userId);
+      await borrarMemoriaUID(userId);
     console.log("Memoria reiniciada para el usuario:", userId);
     return;
-    } else if (userPrompt.trim() === "#SaludoKaiV2ESP") {
-      await saludoHandler({
-        comando: "#SaludoKaiV2ESP",
-        uid: userId,
-        string_fecha_hora,
-      })
-      return;
-    } else if (userPrompt.trim().startsWith("#SaludoKaiV2ENG")) {
-      await saludoHandler({
-        comando: "#SaludoKaiV2ENG",
-        uid: userId,
-        string_fecha_hora,
-      })
-      return;
-    } else if (userPrompt.trim() === "#SaludoKaiV2POR") {
-      await saludoHandler({
-        comando: "#SaludoKaiV2POR",
-        uid: userId,
-        string_fecha_hora,
-      })
-      return;
-    } else if (userPrompt.trim() === "#SaludoKaiV2ESPTOUR") {
-      await saludoHandler({
-        comando: "#SaludoKaiV2ESPTOUR",
-        uid: userId,
-        string_fecha_hora,
-      })
-      return;
-    } else if (userPrompt.trim().startsWith("#SaludoKaiV2ENGTOUR")) {
-      await saludoHandler({
-        comando: "#SaludoKaiV2ENGTOUR",
-        uid: userId,
-        string_fecha_hora,
-      })
-      return;
-    } else if (userPrompt.trim() === "#SaludoKaiV2PORTOUR") {
-      await saludoHandler({
-        comando: "#SaludoKaiV2PORTOUR",
-        uid: userId,
-        string_fecha_hora,
-      })
-      return;
-    }
-
+  } else if (userPrompt.trim().startsWith("#SaludoKaiV2")) {
     // Consultar área de negocio actual
-    const areaNegocio = await getAreaNegocio(userId);
-    // 1) Armar prompt CON historial (antes del run)
-    const promptArmado = await armarPromptParaAgente({
+    await comandoSaludoHandler(userPrompt, userId, string_fecha_hora, areaNegocio);
+    return;
+  }
+
+  // 1) Armar prompt CON historial (antes del run)
+  const promptArmado = await armarPromptParaAgente({
       uid: userId,
       mensaje_usuario: userPrompt,
-      area_negocio: "turismo",
+      area_negocio: areaNegocio,
     });
+    let result;
+    if (areaNegocio === "Turismo") {
+      console.log("Área de negocio actual: Turismo");
+      result = await run(triageAgentTurismo, promptArmado, {
+        context: { userId, userPrompt },
+      });
+    } else if (areaNegocio === "ParqueMet") {
+      result = await run(triageAgentCerro, promptArmado, {
+        context: { userId, userPrompt },
+      });
+      console.log("Área de negocio actual: ParqueMet");
+    }
 
-    // 2) Correr agente con promptArmado
-    const result = await run(triageAgent, promptArmado, {
-      context: { userId, userPrompt },
-    });
-    const respuestaBot = String(result.finalOutput ?? "");
+        
+
+    const respuestaBot = String(result?.finalOutput ?? "");
     console.log(respuestaBot);
 
     // 3) Guardar interacción (después del run)
-
     await guardarInteraccion({
       uid: userId,
       mensaje_usuario: userPrompt,
       mensaje_bot: respuestaBot,
       string_fecha_hora,
+      areaNegocio: areaNegocio,
     });
   } catch (e) {
     if (e instanceof InputGuardrailTripwireTriggered) {
-      console.log("Guardrail activado: entrada peligrosa detectada.");
+      console.error("Hola, soy Kai. Puedo ayudarte con solicitudes relacionadas a Turistik.");
       return;
     }
     throw e;
