@@ -11,7 +11,7 @@ import {
   PROMPT_KAI_TRIAGE,
   PROMPT_KAI_HOPON,
   PROMPT_KAI_EXCURSIONES,
-} from "../prompting/turismo/prompts.js";
+} from "../prompting/turismo/turismoPrompts.js";
 import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
 import { setAreaNegocio } from "../helpers/user_config/user_settings.js";
 

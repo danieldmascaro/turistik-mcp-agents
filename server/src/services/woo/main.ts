@@ -26,6 +26,7 @@ export type WooProductSummary = {
   name: string;
   slug: string;
   permalink: string;
+  status: string;
 
   // 👇 vienen desde meta_data
   video: string | null;
@@ -96,6 +97,7 @@ const toSummary = (p: Partial<WooProduct>): WooProductSummary => {
     name: String((p as any).name ?? ""),
     slug: String((p as any).slug ?? ""),
     permalink: String((p as any).permalink ?? ""),
+    status: String((p as any).status ?? ""),
 
     video: videoVal != null && videoVal !== "" ? String(videoVal) : null,
     horario: horarioVal === "" ? null : horarioVal,
@@ -130,12 +132,14 @@ export async function listarExcursionesWoo(
         "name",
         "slug",
         "permalink",
+        "status",
         "price",
         "regular_price",
         "sale_price",
         "on_sale",
         "images",
-        "meta_data", // 👈 necesario para extraer video/horario
+        "status",
+        "meta_data", 
       ],
   };
 

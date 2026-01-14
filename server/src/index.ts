@@ -85,7 +85,7 @@ server.registerTool(
       return {
         content: [
           text(
-            `❌ Falló obtenerExcursionWooPorId${
+            `Falló obtenerExcursionWooPorId${
               status ? ` (status ${status})` : ""
             }: ${message}`
           ),
@@ -150,7 +150,7 @@ server.registerTool(
             : "Error desconocido llamando listarExcursionesWoo";
 
         return {
-          content: [text(`❌ Falló listarExcursionesWoo${status ? ` (status ${status})` : ""}: ${message}`)],
+          content: [text(`Falló listarExcursionesWoo${status ? ` (status ${status})` : ""}: ${message}`)],
           structuredContent: { data: { error: "API_ERROR", status, message, payload: payloadErr } },
         };
       }
@@ -196,7 +196,7 @@ server.registerTool(
           : "Error desconocido llamando listarExcursionesWoo";
 
       return {
-        content: [text(`❌ Falló listarExcursionesWoo${status ? ` (status ${status})` : ""}: ${message}`)],
+        content: [text(`Falló listarExcursionesWoo${status ? ` (status ${status})` : ""}: ${message}`)],
         structuredContent: { data: { error: "API_ERROR", status, message, payload: payloadErr } },
       };
     }
@@ -229,7 +229,7 @@ async function handleSseRequest(res: ServerResponse) {
 
   transport.onclose = async () => {
     sessions.delete(sessionId);
-    console.log(`🔌 SSE connection closed (${sessionId})`);
+    console.log(`SSE connection closed (${sessionId})`);
   };
 
   transport.onerror = (err) => console.error("⚠️ SSE transport error:", err);
@@ -238,7 +238,7 @@ async function handleSseRequest(res: ServerResponse) {
     await server.connect(transport);
   } catch (err) {
     sessions.delete(sessionId);
-    console.error("❌ Failed to start SSE session:", err);
+    console.error("Failed to start SSE session:", err);
     if (!res.headersSent) res.writeHead(500).end("Failed to establish SSE connection");
   }
 }
@@ -257,7 +257,7 @@ async function handlePostMessage(req: IncomingMessage, res: ServerResponse, url:
   try {
     await session.transport.handlePostMessage(req, res);
   } catch (err) {
-    console.error("❌ Failed to process message:", err);
+    console.error("Failed to process message:", err);
     if (!res.headersSent) res.writeHead(500).end("Failed to process message");
   }
 }
@@ -292,9 +292,9 @@ const httpServer = createServer(async (req, res) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Turistik MCP server running at http://localhost:${PORT}`);
-  console.log(`📡 SSE stream: GET http://localhost:${PORT}${ssePath}`);
-  console.log(`📨 Post:       POST http://localhost:${PORT}${postPath}?sessionId=...`);
+  console.log(`Turistik MCP server running at http://localhost:${PORT}`);
+  console.log(`SSE stream: GET http://localhost:${PORT}${ssePath}`);
+  console.log(`Post:       POST http://localhost:${PORT}${postPath}?sessionId=...`);
 });
 
 main().catch((err) => {

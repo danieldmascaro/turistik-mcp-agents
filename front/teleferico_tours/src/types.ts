@@ -7,6 +7,7 @@ export type WooProductSummary = {
   name: string;
   slug: string;
   permalink: string;
+  status: string;
   video: string | null;
   horario: unknown | null;
   prices: {
