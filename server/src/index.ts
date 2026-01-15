@@ -9,6 +9,10 @@ import { listarExcursionesWoo, obtenerExcursionWooPorId } from "./services/woo/m
 import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcursionesWooInputSchema, text } from "./types.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import {
+  buildOzyParkToolSchema,
+  fetchServiciosInfo,
+} from "./services/ozyServices/ozyParkServices.js";
 import path from "node:path";
 
 
@@ -156,6 +160,75 @@ server.registerTool(
       }
     }
   );
+  const ozyParkInputSchema = buildOzyParkToolSchema();
+  const TicketTelefericoOutputItemSchema = z.object({
+    servicioNombre: z.string(),
+    fechaInicio: z.string(),
+    fechaFin: z.string(),
+    grupoEtario: z.string(),
+    precioUnitario: z.number(),
+  });
+
+  server.registerTool(
+    "Tickets Teleferico",
+    {
+      title: "Informacion sobre los tickets del teleferico",
+      description:
+        "En esta herramienta encontraras informacion sobre los tickets del teleferico y su disponibilidad",
+      inputSchema: ozyParkInputSchema,
+      outputSchema: {
+        data: z.array(TicketTelefericoOutputItemSchema).describe(
+          "Lista de precios por servicio, fecha y grupo etario."
+        ),
+      },
+    },
+    async ({ fecha, servicios }: { fecha: string; servicios: { centroCosto: string; servicioCodigo: string }[] }) => {
+      try {
+        const data = await fetchServiciosInfo({ fecha, servicios });
+        const formatted = data.flatMap((item) => {
+          const servicioNombre = (item.data as any)?.servicioNombre ?? "";
+          const cabeceraPrecios = (item.data as any)?.cabeceraPrecios ?? [];
+          return cabeceraPrecios.flatMap((cabecera: any) => {
+            const fechaInicio = cabecera?.fechaInicio ?? "";
+            const fechaFin = cabecera?.fechaFin ?? "";
+            const precios = cabecera?.precios ?? [];
+            return precios.map((precio: any) => {
+              const grupoEtarioRaw = precio?.grupoEtario ?? "";
+              const grupoEtario =
+                grupoEtarioRaw === "3ra Edad" ||
+                grupoEtarioRaw === "Ni\u00f1os" ||
+                grupoEtarioRaw === "Ninos"
+                  ? "3ra edad y ni\u00f1os"
+                  : grupoEtarioRaw;
+
+              return {
+                servicioNombre,
+                fechaInicio,
+                fechaFin,
+                grupoEtario,
+                precioUnitario: precio?.precioUnitario ?? 0,
+              };
+            });
+          });
+        });
+
+        return {
+          content: [text(JSON.stringify(formatted, null, 2))],
+          structuredContent: { data: formatted },
+        };
+      } catch (err: any) {
+        const message =
+          typeof err?.message === "string"
+            ? err.message
+            : "Error desconocido llamando Tickets Teleferico";
+
+        return {
+          content: [text(`Fallo Tickets Teleferico: ${message}`)],
+          structuredContent: { data: { error: "API_ERROR", message } },
+        };
+      }
+    }
+  );
   server.registerTool(
   "ListarBusHopOnHopOffWoo",
   {
@@ -206,7 +279,7 @@ server.registerTool(
   return server;
 }
 
-const server = createMCPServer();
+const server = await createMCPServer();
 
 async function main() {
   const transport = new StdioServerTransport();
@@ -221,7 +294,7 @@ const postPath = "/mcp/message";
 // SSE
 async function handleSseRequest(res: ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  const server = createMCPServer();
+  const server = await createMCPServer();
   const transport = new SSEServerTransport(postPath, res);
   const sessionId = transport.sessionId;
 

@@ -1,4 +1,19 @@
-import { RequireAtLeastOne } from "../../types.js";
+export type ServicioRaw = {
+  servicioCodigo?: string;
+  centroCosto?: string;
+};
 
+export type ServicioItem = {
+  servicioCodigo: string;
+  centroCosto: string;
+};
 
-// Sources para la respuesta de Tickets Teleférico OzyPark
+export type ContextResponse = {
+  servicios?: ServicioRaw[];
+};
+
+export type ServicioInfoResult = ServicioItem & {
+  data: unknown;
+};
+
+// Sources para la respuesta de Tickets Telefonico OzyPark
