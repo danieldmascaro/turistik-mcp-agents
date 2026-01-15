@@ -1,7 +1,7 @@
 // Configuración y memoria de usuario
 import { sql, getPool } from "../db_helpers/db.js";
 import { buildPromptFromHistory } from "../../prompting/common/user_prompts.js";
-import type { Turno } from "../../prompting/types.js";
+import type { AreaNegocio, Turno } from "../../prompting/types.js";
 import type {
   ArmarPromptParaAgenteParams,
   GuardarInteraccionParams,
@@ -101,7 +101,7 @@ export async function setAreaNegocio(uid: string, area_negocio: string): Promise
 
 
 // Borrar memoria persistente asociada a un uid
-export async function borrarMemoriaUID(uid: string): Promise<void> {
+export async function borrarMemoriaUID(uid: string, areaNegocio: AreaNegocio): Promise<void> {
   if (!uid || typeof uid !== "string" || !uid.trim()) {
     throw new Error("uid inválido");
   }
@@ -110,10 +110,11 @@ export async function borrarMemoriaUID(uid: string): Promise<void> {
   const request = pool.request();
 
   request.input("uid", uid);
+  request.input("area", areaNegocio)
 
   await request.query(`
     DELETE FROM ia.memoria_persistente
-    WHERE uid = @uid;
+    WHERE uid = @uid AND area = @area;
   `);
 }
 

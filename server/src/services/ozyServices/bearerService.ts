@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { requireEnv } from "../requireEnv.js";
 
 // getParquemetToken.ts
@@ -10,9 +11,9 @@ type TokenResponse = {
   [k: string]: unknown;
 };
 
+export const urlOzyPark = requireEnv("OZY_BASE_URL");
 
 export async function ozyToken(): Promise<string> {
-  const url_parquemet = requireEnv("OZY_TOKEN_URL");
   const body_parquemet = {
     grant_type: requireEnv("GRANT_TYPE"),
     client_id: requireEnv("OZY_CLIENT_ID"),
@@ -22,7 +23,7 @@ export async function ozyToken(): Promise<string> {
 
   const body = new URLSearchParams(body_parquemet).toString();
 
-  const res = await fetch(url_parquemet, {
+  const res = await fetch(`${urlOzyPark}/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,

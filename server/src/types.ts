@@ -9,35 +9,37 @@ export type WooListProductsQuery = {
 
 export type IdWooValues = 54942 | 39546 | 44883 | 43203;
 
-const EmptyToUndefined = z
-  .string()
-  .trim()
-  .transform((v) => (v === "" ? undefined : v));
-
-const Precio = z.coerce.number().finite();
+const Precio = z.coerce.number();
 
 export const text = (t: string) => ({ type: "text", text: t } as const);
+
+export const CategoriasWooSchema = z.enum([
+  "playa",
+  "ciudad",
+  "santiago",
+  "nieve",
+  "gastronomía",
+  "vino",
+  "viña",
+  "Neruda",
+  "cerro",
+  "Cerro San Cristóbal",
+  "Hop On",
+]).describe("Filtro por categorías, usar las categorías disponibles infiriendo el contexto conversacional.");
+
+export type CategoriasWoo = z.infer<typeof CategoriasWooSchema>;
 
 export const ListarExcursionesWooInputSchema = z.object({
   consulta: z
     .object({
-      nombre: EmptyToUndefined.optional(),
-      precio_min: Precio.min(0).default(0),
-      precio_max: Precio.min(0).max(999999).default(0),
+      nombre: CategoriasWooSchema,
+      precio_min: Precio.min(0).default(0).describe("Precio mínimo. Solo utilizar si el usuario especifica un rango de precios. De lo contrario, dejar en default."),
+      precio_max: Precio.min(0).max(999999).default(0).describe("Precio máximo. Solo utilizar si el usuario especifica un rango de precios. De lo contrario dejar en default."),
     })
-    .superRefine((val, ctx) => {
-      // Validación lógica: solo si ambos precios están presentes (>0)
-      if (val.precio_min > 0 && val.precio_max > 0 && val.precio_min > val.precio_max) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "precio_min no puede ser mayor que precio_max",
-          path: ["precio_min"],
-        });
-      }
-    }),
 });
 
 export type ListarExcursionesWooInput = z.infer<typeof ListarExcursionesWooInputSchema>;
+
 
 export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
   Partial<T> & { [K in Keys]-?: Required<Pick<T, K>> }[Keys]

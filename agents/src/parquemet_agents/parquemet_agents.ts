@@ -5,7 +5,7 @@ import {
 } from "@openai/agents";
 import { guardrail } from "../tour_agents/tour_agents.js";
 
-const link_ngrok = "https://7b4eab782e5b.ngrok-free.app/mcp";
+const link_ngrok = "https://18b318d3e9ca.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
 
 

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { URL } from "node:url";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";;
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -161,7 +161,7 @@ server.registerTool(
   {
     title: "Listar Bus Hop-On-Hop-Off (WooCommerce)",
     description:
-      "Lista excursiones (productos Woo) por precio, forzando busqueda por 'hop' (Bus Hop-On-Hop-Off).",
+      "En esta herramienta encontrarás información, disponibilidad y precios de los productos Hop On-Hop Off",
     inputSchema: ListarExcursionesWooInputSchema,
     outputSchema: {
       data: z.unknown().describe(
