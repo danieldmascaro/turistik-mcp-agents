@@ -1,4 +1,4 @@
-import { buildPromptBase, temasRelacionados, reglasBase, formatoProductos } from "../common/system_prompt.js";
+import { buildPromptBase, temasRelacionados, reglasBase } from "../common/system_prompt.js";
 import { fecha } from "../helpers/fecha.js";
 
 
@@ -32,6 +32,4 @@ ${fecha}
 Debes detectar si el tema pertenece a ${multiAgentes}. Y utilizar al agente como herramienta según corresponda.
 ${temasRelacionadosParquemet}
 
-## Formato para ofrecer productos
-${formatoProductos}
 `.trim();

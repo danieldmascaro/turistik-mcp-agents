@@ -11,11 +11,12 @@ import {
   PROMPT_KAI_HOPON,
   PROMPT_KAI_EXCURSIONES,
 } from "../prompting/turismo/turismoPrompts.js";
+import { agentesProductosSchema } from "../types.js";
 import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
 import { setAreaNegocio } from "../helpers/user_config/user_settings.js";
 
 
-const link_ngrok = "https://18b318d3e9ca.ngrok-free.app/mcp";
+const link_ngrok = "https://26e30d954b39.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
 
 
@@ -57,6 +58,7 @@ const hopOnHopOffAgent = new Agent({
   name: "Agente de tours Hop-On Hop-Off",
   instructions: PROMPT_KAI_HOPON,
   model: model,
+  outputType: agentesProductosSchema,
   tools: [
     hostedMcpTool({
       serverLabel: "turistik-mcp-server",
@@ -70,6 +72,7 @@ const excursionesAgent = new Agent({
   name: "Agente de Tours y Excursiones",
   instructions: PROMPT_KAI_EXCURSIONES,
   model: model,
+  outputType: agentesProductosSchema,
   tools: [
     hostedMcpTool({
       serverLabel: "turistik-mcp-server",
@@ -97,6 +100,7 @@ export const triageAgentTurismo = Agent.create({
   name: "Agente principal",
   instructions: PROMPT_KAI_TRIAGE_TURISMO,
   model: model,
+  outputType: agentesProductosSchema,
   inputGuardrails: [guardrail],
   tools: [
     hopOnHopOffAgentAsTool,

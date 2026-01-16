@@ -20,6 +20,54 @@ const rl = readline.createInterface({ input, output });
 const userPrompt = await rl.question("Ingrese un prompt: ");
 rl.close();
 
+type ProductoItem = {
+  nombre?: string;
+  precio?: number;
+  descripcion?: string;
+  horario?: string;
+};
+
+type AgentesProductosOutput = {
+  respuesta?: string;
+  tickets?: ProductoItem[];
+};
+
+const formatRespuestaAgentesProductos = (finalOutput: unknown): string => {
+  if (!finalOutput || typeof finalOutput !== "object") {
+    return String(finalOutput ?? "");
+  }
+
+  const output = finalOutput as AgentesProductosOutput;
+  const respuesta = typeof output.respuesta === "string" ? output.respuesta : "";
+  const tickets = Array.isArray(output.tickets) ? output.tickets : [];
+
+  if (tickets.length === 0) {
+    return respuesta;
+  }
+
+  const lines: string[] = [respuesta, "", "Detalles de los productos:"];
+  for (const ticket of tickets) {
+    const nombre = ticket?.nombre ?? "";
+    const precioNumero = typeof ticket?.precio === "number" ? ticket.precio : Number(ticket?.precio);
+    const precioFormateado = Number.isFinite(precioNumero)
+      ? precioNumero.toLocaleString("es-CL")
+      : String(ticket?.precio ?? "");
+    const descripcion = ticket?.descripcion ?? "";
+    const horario = ticket?.horario ?? "";
+
+    lines.push(nombre);
+    lines.push(`Precios desde: $${precioFormateado} CLP`);
+    lines.push(descripcion);
+    lines.push(`Horario: "${horario}"`);
+    lines.push("");
+  }
+
+  if (lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+
+  return lines.join("\n");
+};
 
 
 async function main() {
@@ -55,7 +103,7 @@ async function main() {
 
         
 
-    const respuestaBot = String(result?.finalOutput ?? "");
+    const respuestaBot = formatRespuestaAgentesProductos(result?.finalOutput);
     console.log(respuestaBot);
 
     // 3) Guardar interacción (después del run)

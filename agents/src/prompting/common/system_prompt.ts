@@ -15,7 +15,7 @@ Preguntas sobre precios y disponibilidad de los productos son admitidas.`.trim()
     return temasRelacionados
 }
 
-export const formatoProductos = `
+const formatoProductos = `
 Cuando ofrezcas productos, sigue este formato:
 <Nombre del producto>
 <Breve descripción del producto>

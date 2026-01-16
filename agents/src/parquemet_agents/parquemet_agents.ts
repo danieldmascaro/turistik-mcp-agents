@@ -3,8 +3,9 @@ import {
   hostedMcpTool,
 } from "@openai/agents";
 import { guardrail } from "../tour_agents/tour_agents.js";
+import { PROMPT_KAI_TRIAGE_PARQUEMET } from "../prompting/parqueMet/parqueMetPrompts.js";
 
-const link_ngrok = "https://18b318d3e9ca.ngrok-free.app/mcp";
+const link_ngrok = "https://26e30d954b39.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
 
 
@@ -33,7 +34,10 @@ const telefericoAgent = new Agent({
   ],
 });
 
-const funicularAgentTool = funicularAgent.asTool({})
+const funicularAgentTool = funicularAgent.asTool({
+  toolName: "Agente del Funicular",
+  toolDescription: "Utiliza esta herramienta para obtener información sobre los servicios del Funicular"
+})
 
 const parqueBusesAgentTool = parqueBusesAgent.asTool({
   toolName: "Agente Parque Aventura, Minigolf, Buses panorámicos/Hop On",
@@ -48,7 +52,7 @@ const telefericoAgentTool = telefericoAgent.asTool({
 export const triageAgentCerro = Agent.create({
   name: "Triage Agent",
   model: model,
-  instructions: "agente en construcción",
-  tools:[telefericoAgentTool],
+  instructions: PROMPT_KAI_TRIAGE_PARQUEMET,
+  tools:[telefericoAgentTool, parqueBusesAgentTool, funicularAgentTool],
   inputGuardrails: [guardrail],
 });

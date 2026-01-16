@@ -1,5 +1,5 @@
 import { fecha } from "../helpers/fecha.js";
-import { buildPromptBase, formatoProductos, reglasBase, temasRelacionados } from "../common/system_prompt.js";
+import { buildPromptBase, reglasBase, temasRelacionados } from "../common/system_prompt.js";
 
 const areaNegocio = "Turismo y buses Hop-On Hop-Off";
 const temasTurismo = "Buses Hop On Hop Off, Excursiones por Santiago Centro, Tours gastronómicos, Viñedos, Viajes a la nieve, Viajes cualquiera de las regiones de Chile."
@@ -37,8 +37,6 @@ ${fecha}
 Debes detectar si el tema pertenece a Buses Hop On-Hop Off, o a excursiones. Y utilizar al agente como herramienta según corresponda.
 ${temasRelacionadosTurismo}
 
-## Formato para ofrecer productos
-${formatoProductos}
 `.trim();
 
 // Reglas comunes a los agentes especializados
@@ -67,8 +65,6 @@ ${reglasHopOn}
 ## Contexto de fecha y hora
 ${fecha}
 
-## Formato para ofrecer productos
-${formatoProductos}
 `.trim();
 
 // Prompt para el agente de Tours y Excursiones
@@ -90,6 +86,4 @@ ${reglasExcursiones}
 ## Contexto de fecha y hora
 ${fecha}
 
-## Formato para ofrecer productos
-${formatoProductos}
 `.trim();

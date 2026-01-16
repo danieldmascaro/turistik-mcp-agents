@@ -71,7 +71,7 @@ server.registerTool(
   "WooPorId",
   {
     title: "Obtener datos básicos servicio.",
-    description: "Obtiene un producto WooCommerce por su ID.",
+    description: "Obtiene un producto WooCommerce por su ID. Usar solo una vez por ejecución.",
     inputSchema: z.object({
       id: z
         .number()
@@ -121,7 +121,7 @@ server.registerTool(
     {
       title: "Listar Excursiones (WooCommerce)",
       description:
-        "Lista excursiones (productos Woo) filtrando por nombre y rango de precio. Aquí encontrarás Tours: gastronómicos, a la nieve, por el centro histórico de Santiago, al cerro san cristóbal (funicular y teleférico), al Litoral central, Casa de Neruda, Viñedos.",
+        "Lista excursiones (productos Woo) filtrando por nombre y rango de precio. Aquí encontrarás Tours: gastronómicos, a la nieve, por el centro histórico de Santiago, al cerro san cristóbal (funicular y teleférico), al Litoral central, Casa de Neruda, Viñedos. Usar solo una vez por ejecución.",
       inputSchema: ListarExcursionesWooInputSchema,
       outputSchema: {
         data: z
@@ -179,7 +179,7 @@ server.registerTool(
     {
       title: "Informacion sobre los tickets del teleferico",
       description:
-        "En esta herramienta encontraras informacion sobre los tickets del teleferico y su disponibilidad",
+        "En esta herramienta encontraras informacion sobre los tickets del teleferico y su disponibilidad. Usar solo una vez por ejecución.",
       inputSchema: ozyParkInputSchema,
       outputSchema: {
         data: z.array(TicketTelefericoOutputItemSchema).describe(
@@ -213,7 +213,7 @@ server.registerTool(
     {
       title: "Cupos disponibles del teleferico",
       description:
-        "Entrega los cupos disponibles por franja horaria para un servicio y zona de origen.",
+        "Entrega los cupos disponibles por franja horaria para un servicio y zona de origen. Utilizar solo una vez por ejecución.",
       inputSchema: ozyParkCuposInputSchema,
       outputSchema: {
         data: z.unknown().describe("Respuesta de cupos por fecha y horario."),
