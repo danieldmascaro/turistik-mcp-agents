@@ -58,9 +58,7 @@ function buildFechaBotPrompt(): string {
   const fecha_formateada = `${dd} de ${mes} de ${yyyy}`;
 
   return (
-    `Hoy es ${dia_semana}, ${fecha_formateada} y son las ${hora_formateada}. ` +
-    `Si te preguntan por una fecha y no te especifican el año, asume que se refieren ` +
-    `al año ${annio_actual} o al siguiente, si es que la fecha ya pasó.`
+    `Hoy es ${dia_semana}, ${fecha_formateada} y son las ${hora_formateada}. ` 
   );
 }
 

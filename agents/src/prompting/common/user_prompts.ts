@@ -1,4 +1,4 @@
-import { fecha } from "../helpers/fecha.js";
+import { fecha, string_fecha_hora } from "../helpers/fecha.js";
 import type { BuildPromptFromHistoryParams, SaludoKey, Turno } from "../types.js";
 import { saludos_kai } from "../types.js";
 
@@ -39,7 +39,7 @@ export function formatHistorial(turnos: Turno[]): string {
   return turnos
     .map(
       (t, i) =>
-        `${fecha}\nInteracción ${i + 1}:\nUsuario: ${t.mensaje_usuario}\nAgente: ${t.mensaje_bot}\n`
+        `${string_fecha_hora}\nInteracción ${i + 1}:\nUsuario: ${t.mensaje_usuario}\nAgente: ${t.mensaje_bot}\n`
     )
     .join("\n");
 }

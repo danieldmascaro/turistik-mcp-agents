@@ -53,16 +53,16 @@ const promptBaseHopOn = promptBase + `
 Tu tarea es proporcionar información detallada sobre los tours Hop-On Hop-Off.
 `.trim();
 
-const reglasHopOn = reglasComunesAgentes
+const reglasHopOn = reglasBase + "\n" + reglasComunesAgentes
 
 export const PROMPT_KAI_HOPON = `
-## Instrucción principal
+# Instrucción principal
 ${promptBaseHopOn}
 
-## Reglas de comportamiento
+# Reglas de comportamiento
 ${reglasHopOn}
 
-## Contexto de fecha y hora
+# Contexto de fecha y hora
 ${fecha}
 
 `.trim();

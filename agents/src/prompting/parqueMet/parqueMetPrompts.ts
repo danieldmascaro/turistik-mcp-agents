@@ -1,4 +1,4 @@
-import { buildPromptBase, temasRelacionados, reglasBase } from "../common/system_prompt.js";
+import { buildPromptBase, temasRelacionados, reglasBase, reglasComunesAgentes } from "../common/system_prompt.js";
 import { fecha } from "../helpers/fecha.js";
 
 
@@ -10,7 +10,7 @@ const multiAgentes = "Teleférico, Funicular, Parque Aventura/Minigolf o buses p
 
 // Variables Triage
 
-const promptBaseTriageParquemet = buildPromptBase(areaNegocio)
+const promptBase = buildPromptBase(areaNegocio)
 const temasRelacionadosParquemet = temasRelacionados(areaNegocio, temasParquemet)
 const reglasTriage = reglasBase + `
 - Si te preguntan por ${multiAgentes}, deriva inmediatamente la conversación al agente correspondiente.
@@ -19,7 +19,7 @@ const reglasTriage = reglasBase + `
 
 export const PROMPT_KAI_TRIAGE_PARQUEMET = `
 ## Instrucción principal
-${promptBaseTriageParquemet}
+${promptBase}
 
 ## Reglas de comportamiento
 ${reglasTriage}
@@ -31,5 +31,26 @@ ${fecha}
 
 Debes detectar si el tema pertenece a ${multiAgentes}. Y utilizar al agente como herramienta según corresponda.
 ${temasRelacionadosParquemet}
+
+`.trim();
+
+
+// Prompt agente teleferico
+
+const promptTeleferico = promptBase + `
+Tu tarea es proporcionar información detallada sobre los tours Hop-On Hop-Off.
+`.trim();
+
+const reglasTeleferico = reglasBase + "\n" + reglasComunesAgentes + "\n-Debes ser capaz de sacar fechas con frases tipo, en una semana más, o el próximo martes, calculando la cantidad de días."
+
+export const PROMPT_KAI_TELEFERICO = `
+# Instrucción principal
+${promptTeleferico}
+
+# Reglas de comportamiento
+${reglasTeleferico}
+
+# Contexto de fecha y hora
+${fecha}
 
 `.trim();
