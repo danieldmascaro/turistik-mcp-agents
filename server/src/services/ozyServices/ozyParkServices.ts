@@ -7,6 +7,7 @@ import type {
   ServicioItem,
 } from "./types.js";
 
+
 export async function fetchContext(): Promise<ServicioItem[]> {
   const token = await ozyToken();
   const context = axios.create({
@@ -27,46 +28,42 @@ export async function fetchContext(): Promise<ServicioItem[]> {
   }));
 }
 
-export const buildServicioEnums = (servicios: ServicioItem[]) => {
-  const servicioCodigoOptions = Array.from(
-    new Set(servicios.map((servicio) => servicio.servicioCodigo))
-  );
-  const centroCostoOptions = Array.from(
-    new Set(servicios.map((servicio) => servicio.centroCosto))
+export const buildServicioPairSchema = (servicios: ServicioItem[]) => {
+  const pairOptions = servicios.map(
+    (servicio) => `${servicio.centroCosto}||${servicio.servicioCodigo}`
   );
 
-  return {
-    servicioCodigoEnum: z.enum(servicioCodigoOptions as [string, ...string[]]),
-    centroCostoEnum: z.enum(centroCostoOptions as [string, ...string[]]),
-  };
+  if (pairOptions.length === 0) {
+    return z.never();
+  }
+
+  return z.enum(pairOptions as [string, ...string[]]);
 };
+
+function parseServicioPair(pair: string): ServicioItem {
+  const [centroCosto, servicioCodigo] = pair.split("||");
+  if (!centroCosto || !servicioCodigo) {
+    throw new Error("Formato de servicio invalido.");
+  }
+  return { centroCosto, servicioCodigo };
+}
 
 export async function buildOzyParkToolSchema() {
   const servicios = await fetchContext();
-  const { servicioCodigoEnum, centroCostoEnum } = buildServicioEnums(servicios);
-
-  const ServicioItemSchema = z.object({
-    centroCosto: centroCostoEnum,
-    servicioCodigo: servicioCodigoEnum,
-  });
+  const ServicioPairSchema = buildServicioPairSchema(servicios);
 
   return z.object({
-    fecha: z.string().min(1),
-    servicios: z.array(ServicioItemSchema).min(1),
+    servicios: z.array(ServicioPairSchema).min(1),
   });
 }
 
 export async function fetchServiciosInfo(params: {
   fecha: string;
-  servicios: ServicioItem[];
+  servicios: string[];
 }): Promise<ServicioInfoResult[]> {
   const token = await ozyToken();
   const serviciosValidos = await fetchContext();
-  const { servicioCodigoEnum, centroCostoEnum } = buildServicioEnums(serviciosValidos);
-  const ServicioItemSchema = z.object({
-    centroCosto: centroCostoEnum,
-    servicioCodigo: servicioCodigoEnum,
-  });
+  const ServicioPairSchema = buildServicioPairSchema(serviciosValidos);
 
   const client = axios.create({
     baseURL: `${urlOzyPark}/api/v1`,
@@ -80,8 +77,9 @@ export async function fetchServiciosInfo(params: {
 
   const numeroDias = 1;
   return Promise.all(
-    params.servicios.map(async (servicio): Promise<ServicioInfoResult> => {
-      ServicioItemSchema.parse(servicio);
+    params.servicios.map(async (pair): Promise<ServicioInfoResult> => {
+      ServicioPairSchema.parse(pair);
+      const servicio = parseServicioPair(pair);
 
       const centroCosto = encodeURIComponent(servicio.centroCosto);
       const servicioCodigo = encodeURIComponent(servicio.servicioCodigo);
@@ -93,3 +91,5 @@ export async function fetchServiciosInfo(params: {
     })
   );
 }
+
+export const ozyParkInputSchema = await buildOzyParkToolSchema();

@@ -10,11 +10,18 @@ import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcurs
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
-  buildOzyParkToolSchema,
   fetchServiciosInfo,
+  ozyParkInputSchema,
 } from "./services/ozyServices/ozyParkServices.js";
 import path from "node:path";
 
+function getTodayYYYYMMDD(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 // 1. Obtener la ruta del archivo actual
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +39,16 @@ const HTML_TEMPLATE =
   `<div id="root-carrusel" class="max-h-full max-w-full min-h-full max-h-full"></div>\n` +
   `<script type="module">${BUSCAR_TOUR_JS}</script>\n` +
   `<style>${BUSCAR_TOUR_CSS}</style>\n`;
+
+const TicketTelefericoOutputItemSchema = z.object({
+  servicioNombre: z.string(),
+  fechaInicio: z.string(),
+  fechaFin: z.string(),
+  grupoEtario: z.string(),
+  precioUnitario: z.number(),
+});
+
+
 
 
 
@@ -160,15 +177,6 @@ server.registerTool(
       }
     }
   );
-  const ozyParkInputSchema = buildOzyParkToolSchema();
-  const TicketTelefericoOutputItemSchema = z.object({
-    servicioNombre: z.string(),
-    fechaInicio: z.string(),
-    fechaFin: z.string(),
-    grupoEtario: z.string(),
-    precioUnitario: z.number(),
-  });
-
   server.registerTool(
     "Tickets Teleferico",
     {
@@ -182,32 +190,36 @@ server.registerTool(
         ),
       },
     },
-    async ({ fecha, servicios }: { fecha: string; servicios: { centroCosto: string; servicioCodigo: string }[] }) => {
+    async ({ servicios }: { servicios: string[] }) => {
       try {
+        const fecha = getTodayYYYYMMDD();
         const data = await fetchServiciosInfo({ fecha, servicios });
         const formatted = data.flatMap((item) => {
           const servicioNombre = (item.data as any)?.servicioNombre ?? "";
           const cabeceraPrecios = (item.data as any)?.cabeceraPrecios ?? [];
           return cabeceraPrecios.flatMap((cabecera: any) => {
-            const fechaInicio = cabecera?.fechaInicio ?? "";
-            const fechaFin = cabecera?.fechaFin ?? "";
+            const fechaInicio = fecha;
+            const fechaFin = fecha;
             const precios = cabecera?.precios ?? [];
-            return precios.map((precio: any) => {
+            const seenGrupo = new Set<string>();
+            return precios.flatMap((precio: any) => {
               const grupoEtarioRaw = precio?.grupoEtario ?? "";
               const grupoEtario =
                 grupoEtarioRaw === "3ra Edad" ||
-                grupoEtarioRaw === "Ni\u00f1os" ||
+                grupoEtarioRaw === "Niños" ||
                 grupoEtarioRaw === "Ninos"
-                  ? "3ra edad y ni\u00f1os"
+                  ? "3ra edad y niños"
                   : grupoEtarioRaw;
+              if (seenGrupo.has(grupoEtario)) return [];
+              seenGrupo.add(grupoEtario);
 
-              return {
+              return [{
                 servicioNombre,
                 fechaInicio,
                 fechaFin,
                 grupoEtario,
                 precioUnitario: precio?.precioUnitario ?? 0,
-              };
+              }];
             });
           });
         });
@@ -279,7 +291,7 @@ server.registerTool(
   return server;
 }
 
-const server = await createMCPServer();
+const server = createMCPServer();
 
 async function main() {
   const transport = new StdioServerTransport();
@@ -294,7 +306,7 @@ const postPath = "/mcp/message";
 // SSE
 async function handleSseRequest(res: ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  const server = await createMCPServer();
+  const server = createMCPServer();
   const transport = new SSEServerTransport(postPath, res);
   const sessionId = transport.sessionId;
 
