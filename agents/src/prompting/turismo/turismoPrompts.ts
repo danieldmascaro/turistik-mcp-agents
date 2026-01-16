@@ -1,5 +1,5 @@
 import { fecha } from "../helpers/fecha.js";
-import { buildPromptBase, reglasBase, temasRelacionados } from "../common/system_prompt.js";
+import { buildPromptBase, reglasBase, temasRelacionados, formatoProductos } from "../common/system_prompt.js";
 
 const areaNegocio = "Turismo y buses Hop-On Hop-Off";
 const temasTurismo = "Buses Hop On Hop Off, Excursiones por Santiago Centro, Tours gastronómicos, Viñedos, Viajes a la nieve, Viajes cualquiera de las regiones de Chile."
@@ -23,16 +23,20 @@ const reglasTriage = reglasBase + `
 
 
 export const PROMPT_KAI_TRIAGE_TURISMO = `
-## Instrucción principal
+# Instrucción principal
 ${promptBaseTriage}
 
-## Reglas de comportamiento
+# Reglas de comportamiento
 ${reglasTriage}
 
-## Contexto de fecha y hora
+# Contexto de fecha y hora
 ${fecha}
 
-## Temas relacionados
+# Formato obligatorio para entregar los productos
+
+${formatoProductos}
+
+# Temas relacionados
 
 Debes detectar si el tema pertenece a Buses Hop On-Hop Off, o a excursiones. Y utilizar al agente como herramienta según corresponda.
 ${temasRelacionadosTurismo}
@@ -65,25 +69,32 @@ ${reglasHopOn}
 # Contexto de fecha y hora
 ${fecha}
 
+# Formato obligatorio para entregar los productos
+
+${formatoProductos}
+
 `.trim();
 
 // Prompt para el agente de Tours y Excursiones
 
 const promptBaseExcursiones = promptBase + `
 Tu tarea es proporcionar información detallada sobre los tours y excursiones disponibles.
-
 `.trim();
 
 const reglasExcursiones = reglasComunesAgentes
 
 export const PROMPT_KAI_EXCURSIONES = `
-## Instrucción principal
+# Instrucción principal
 ${promptBaseExcursiones}
 
-## Reglas de comportamiento
+# Reglas de comportamiento
 ${reglasExcursiones}
 
-## Contexto de fecha y hora
+# Contexto de fecha y hora
 ${fecha}
+
+# Formato obligatorio para entregar los productos
+
+${formatoProductos}
 
 `.trim();

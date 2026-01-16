@@ -1,4 +1,4 @@
-import { buildPromptBase, temasRelacionados, reglasBase, reglasComunesAgentes } from "../common/system_prompt.js";
+import { buildPromptBase, temasRelacionados, reglasBase, reglasComunesAgentes, formatoProductos } from "../common/system_prompt.js";
 import { fecha } from "../helpers/fecha.js";
 
 
@@ -18,19 +18,23 @@ const reglasTriage = reglasBase + `
 `.trim();
 
 export const PROMPT_KAI_TRIAGE_PARQUEMET = `
-## Instrucción principal
+# Instrucción principal
 ${promptBase}
 
-## Reglas de comportamiento
+# Reglas de comportamiento
 ${reglasTriage}
 
-## Contexto de fecha y hora
+# Contexto de fecha y hora
 ${fecha}
 
-## Temas relacionados
+# Temas relacionados
 
 Debes detectar si el tema pertenece a ${multiAgentes}. Y utilizar al agente como herramienta según corresponda.
 ${temasRelacionadosParquemet}
+
+# Formato obligatorio para entregar los productos
+
+${formatoProductos}
 
 `.trim();
 
@@ -52,5 +56,9 @@ ${reglasTeleferico}
 
 # Contexto de fecha y hora
 ${fecha}
+
+# Formato obligatorio para entregar los productos
+
+${formatoProductos}
 
 `.trim();

@@ -43,7 +43,7 @@ typeof import("./common/user_prompts.js").getSaludoKai
 
 // Cambio de área de negocio
 
-export const AREA_NEGOCIO_CHOICES = ["ParqueMet", "Turismo"] as const;
+export const AREA_NEGOCIO_CHOICES = ["ParqueMet", "Turismo", "No Identificada"] as const;
 export const AreaNegocioSchema = z.enum(AREA_NEGOCIO_CHOICES);
 export type AreaNegocio = z.infer<typeof AreaNegocioSchema>;
 

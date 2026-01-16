@@ -40,16 +40,26 @@ export const guardrail: InputGuardrail = {
 
     const userId = contexto.userId ?? "unknown";
     const userPrompt = contexto.userPrompt ?? (typeof input === "string" ? input : JSON.stringify(input));
-    await setAreaNegocio(
-      userId,
-      result.finalOutput?.area_de_negocio || ""
-    );
+    const areaActual = contexto.areaNegocio;
+    const areaDetectada = result.finalOutput?.area_de_negocio;
+    const areaEsValida = typeof areaDetectada === "string" && areaDetectada !== "No Identificada";
+    const areaCambio = areaEsValida && typeof areaActual === "string" && areaActual !== areaDetectada;
+
+    if (areaEsValida) {
+      await setAreaNegocio(userId, areaDetectada);
+    }
     await registroLogs("Guardrail", userPrompt, userId);
-    console.log(context)
 
     return {
-      outputInfo: result.finalOutput,
-      tripwireTriggered: result.finalOutput?.isDangerous === true || result.finalOutput?.outOfContext === true,
+      outputInfo: {
+        ...result.finalOutput,
+        reason: areaCambio ? "AREA_CHANGE" : undefined,
+        nuevaArea: areaCambio ? areaDetectada : undefined,
+      },
+      tripwireTriggered:
+        result.finalOutput?.isDangerous === true ||
+        result.finalOutput?.outOfContext === true ||
+        areaCambio,
     };
   },
 };

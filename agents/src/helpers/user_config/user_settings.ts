@@ -101,7 +101,7 @@ export async function setAreaNegocio(uid: string, area_negocio: string): Promise
 
 
 // Borrar memoria persistente asociada a un uid
-export async function borrarMemoriaUID(uid: string, areaNegocio: AreaNegocio): Promise<void> {
+export async function borrarMemoriaUID(uid: string): Promise<void> {
   if (!uid || typeof uid !== "string" || !uid.trim()) {
     throw new Error("uid inválido");
   }
@@ -110,11 +110,10 @@ export async function borrarMemoriaUID(uid: string, areaNegocio: AreaNegocio): P
   const request = pool.request();
 
   request.input("uid", uid);
-  request.input("area", areaNegocio)
 
   await request.query(`
     DELETE FROM ia.memoria_persistente
-    WHERE uid = @uid AND area = @area;
+    WHERE uid = @uid
   `);
 }
 

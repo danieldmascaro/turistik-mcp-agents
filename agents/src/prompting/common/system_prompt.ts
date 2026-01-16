@@ -28,16 +28,24 @@ export const reglasComunesAgentes = `
 - **No se puede rellenar la plantilla de productos sin consultar previamente a una herramienta**
 `.trim();
 
+export const formatoProductos = `
+<Nombre del producto>\n
+<Descripción>\n
+Precios desde: $<Precio> CLP\n
+<Horario del producto>\n
+<Link de compra>\n`.trim();
+
 export const temasRelacionadosTurismo = `
-Los temas relacionados a Turismo son: Buses Hop On Hop Off, Excursiones por Santiago Centro, Tours gastronómicos, Viñedos, Viajes a la nieve, Viajes cualquiera de las regiones de Chile.
+Los temas relacionados a Turismo son: Buses Hop On Hop Off, Excursiones por Santiago Centro, Tours gastronómicos, Viñedos, Todo tipo de excursiones (a la playa, a la nieve, a viñas), Viajes cualquiera de las regiones de Chile.
 Saludos y cordialidades son considerados temas relacionados.
-Preguntas sobre precios y disponibilidad de los productos son admitidas.`.trim()
+Preguntas sobre precios y disponibilidad de los productos son admitidas.`.trim();
 
 export const GUARDRAIL_PROMPT = `Estas encargado de revisar la entrada del usuario. 
 El contexto es un sistema de multiagentes que resuelven temas relacionados al turismo. 
 Debes identificar el área de negocio correspondiente a la solicitud del usuario.
 Si la entrada del usuario contiene solicitudes inapropiadas o peligrosas, debes indicar que la entrada es peligrosa.
 Todo lo que no esté en la sección "Temas relacionados" se considera fuera de contexto.
+Para mensajes neutros, selecciona "No identificada"
 
 ## Temas Relacionados
 

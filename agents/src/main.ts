@@ -24,7 +24,7 @@ rl.close();
 async function main() {
   try {
     if (userPrompt.trim() === "#Reiniciar") {
-      await borrarMemoriaUID(userId, areaNegocio);
+      await borrarMemoriaUID(userId);
     console.log("Memoria reiniciada para el usuario:", userId);
     return;
   } else if (userPrompt.trim().startsWith("#SaludoKaiV2")) {
