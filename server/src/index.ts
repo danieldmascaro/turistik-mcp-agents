@@ -10,18 +10,15 @@ import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcurs
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
-  fetchServiciosInfo,
+  fetchTelefericoItems,
+  fetchCuposInfo,
+  ozyParkCuposInputSchema,
   ozyParkInputSchema,
 } from "./services/ozyServices/ozyParkServices.js";
+import { fecha_actual } from "./helpers/fecha.js";
 import path from "node:path";
 
-function getTodayYYYYMMDD(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+
 
 // 1. Obtener la ruta del archivo actual
 const __filename = fileURLToPath(import.meta.url);
@@ -129,7 +126,7 @@ server.registerTool(
       outputSchema: {
         data: z
           .unknown()
-          .describe("JSON devuelto por Woo: { data: WooProduct[], pagination: { total, totalPages } }."),
+          .describe("Información de los tickets solicitados."),
       },
       _meta: {
         "openai/outputTemplate": "ui://widget/carrusel_tours.html",
@@ -178,7 +175,7 @@ server.registerTool(
     }
   );
   server.registerTool(
-    "Tickets Teleferico",
+    "TicketsTeleferico",
     {
       title: "Informacion sobre los tickets del teleferico",
       description:
@@ -192,41 +189,11 @@ server.registerTool(
     },
     async ({ servicios }: { servicios: string[] }) => {
       try {
-        const fecha = getTodayYYYYMMDD();
-        const data = await fetchServiciosInfo({ fecha, servicios });
-        const formatted = data.flatMap((item) => {
-          const servicioNombre = (item.data as any)?.servicioNombre ?? "";
-          const cabeceraPrecios = (item.data as any)?.cabeceraPrecios ?? [];
-          return cabeceraPrecios.flatMap((cabecera: any) => {
-            const fechaInicio = fecha;
-            const fechaFin = fecha;
-            const precios = cabecera?.precios ?? [];
-            const seenGrupo = new Set<string>();
-            return precios.flatMap((precio: any) => {
-              const grupoEtarioRaw = precio?.grupoEtario ?? "";
-              const grupoEtario =
-                grupoEtarioRaw === "3ra Edad" ||
-                grupoEtarioRaw === "Niños" ||
-                grupoEtarioRaw === "Ninos"
-                  ? "3ra edad y niños"
-                  : grupoEtarioRaw;
-              if (seenGrupo.has(grupoEtario)) return [];
-              seenGrupo.add(grupoEtario);
-
-              return [{
-                servicioNombre,
-                fechaInicio,
-                fechaFin,
-                grupoEtario,
-                precioUnitario: precio?.precioUnitario ?? 0,
-              }];
-            });
-          });
-        });
+        const deduped = await fetchTelefericoItems({ fecha: fecha_actual, servicios });
 
         return {
-          content: [text(JSON.stringify(formatted, null, 2))],
-          structuredContent: { data: formatted },
+          content: [text(JSON.stringify(deduped, null, 2))],
+          structuredContent: { data: deduped },
         };
       } catch (err: any) {
         const message =
@@ -236,6 +203,50 @@ server.registerTool(
 
         return {
           content: [text(`Fallo Tickets Teleferico: ${message}`)],
+          structuredContent: { data: { error: "API_ERROR", message } },
+        };
+      }
+    }
+  );
+  server.registerTool(
+    "CuposTeleferico",
+    {
+      title: "Cupos disponibles del teleferico",
+      description:
+        "Entrega los cupos disponibles por franja horaria para un servicio y zona de origen.",
+      inputSchema: ozyParkCuposInputSchema,
+      outputSchema: {
+        data: z.unknown().describe("Respuesta de cupos por fecha y horario."),
+      },
+    },
+    async ({
+      fecha,
+      servicios,
+      zonaOrigenAka,
+    }: {
+      fecha: string;
+      servicios: string[];
+      zonaOrigenAka: "OASIS" | "TUPAHUE" | "CUMBRE";
+    }) => {
+      try {
+        const data = await fetchCuposInfo({
+          fecha,
+          servicios,
+          zonaOrigenAka,
+        });
+
+        return {
+          content: [text(JSON.stringify(data, null, 2))],
+          structuredContent: { data },
+        };
+      } catch (err: any) {
+        const message =
+          typeof err?.message === "string"
+            ? err.message
+            : "Error desconocido llamando Cupos Teleferico";
+
+        return {
+          content: [text(`Fallo Cupos Teleferico: ${message}`)],
           structuredContent: { data: { error: "API_ERROR", message } },
         };
       }
@@ -377,9 +388,9 @@ const httpServer = createServer(async (req, res) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`Turistik MCP server running at http://localhost:${PORT}`);
-  console.log(`SSE stream: GET http://localhost:${PORT}${ssePath}`);
-  console.log(`Post:       POST http://localhost:${PORT}${postPath}?sessionId=...`);
+  console.log(`http://localhost:${PORT}`);
+  console.log(`http://localhost:${PORT}${ssePath}`);
+  console.log(`http://localhost:${PORT}${postPath}?sessionId=...`);
 });
 
 main().catch((err) => {

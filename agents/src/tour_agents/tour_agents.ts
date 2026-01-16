@@ -1,4 +1,3 @@
-import z from "zod";
 import { registroLogs } from "../prompting/helpers/registro_logs.js";
 import {
   Agent,
@@ -8,12 +7,13 @@ import {
 } from "@openai/agents";
 import { GuardrailOutputSchema } from "../prompting/types.js";
 import {
-  PROMPT_KAI_TRIAGE,
+  PROMPT_KAI_TRIAGE_TURISMO,
   PROMPT_KAI_HOPON,
   PROMPT_KAI_EXCURSIONES,
 } from "../prompting/turismo/turismoPrompts.js";
 import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
 import { setAreaNegocio } from "../helpers/user_config/user_settings.js";
+
 
 const link_ngrok = "https://18b318d3e9ca.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
@@ -95,7 +95,7 @@ const toursExcursionesAgentAsTool = excursionesAgent.asTool({
 
 export const triageAgentTurismo = Agent.create({
   name: "Agente principal",
-  instructions: PROMPT_KAI_TRIAGE,
+  instructions: PROMPT_KAI_TRIAGE_TURISMO,
   model: model,
   inputGuardrails: [guardrail],
   tools: [

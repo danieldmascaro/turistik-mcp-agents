@@ -14,6 +14,7 @@ const Precio = z.coerce.number();
 export const text = (t: string) => ({ type: "text", text: t } as const);
 
 export const CategoriasWooSchema = z.enum([
+  "",
   "playa",
   "ciudad",
   "santiago",
@@ -25,7 +26,8 @@ export const CategoriasWooSchema = z.enum([
   "cerro",
   "Cerro San Cristóbal",
   "Hop On",
-]).describe("Filtro por categorías, usar las categorías disponibles infiriendo el contexto conversacional.");
+  "golf"
+]).describe("Filtro por categorías, usar las categorías disponibles infiriendo el contexto conversacional.").default("");
 
 export type CategoriasWoo = z.infer<typeof CategoriasWooSchema>;
 

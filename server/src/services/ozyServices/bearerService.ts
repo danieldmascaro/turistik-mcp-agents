@@ -39,9 +39,6 @@ export async function ozyToken(): Promise<string> {
   if (!data.access_token) {
     throw new Error("La respuesta no trae access_token");
   }
-
-  // Solo retornamos/imprimimos el token
-  console.log(data.access_token);
   return data.access_token;
 }
 
