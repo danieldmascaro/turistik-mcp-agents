@@ -1,7 +1,7 @@
-// Configuración y memoria de usuario
+
 import { sql, getPool } from "../db_helpers/db.js";
 import { buildPromptFromHistory } from "../../prompting/common/user_prompts.js";
-import type { AreaNegocio, Turno } from "../../prompting/types.js";
+import type { Turno } from "../../prompting/types.js";
 import type {
   ArmarPromptParaAgenteParams,
   GuardarInteraccionParams,

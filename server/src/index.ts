@@ -6,7 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { listarExcursionesWoo, obtenerExcursionWooPorId } from "./services/woo/main.js";
-import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcursionesWooInputSchema, text } from "./types.js";
+import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcursionesWooInputSchema, text, ListarExcursionesWooHopOn } from "./types.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {

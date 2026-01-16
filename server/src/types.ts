@@ -29,12 +29,25 @@ export const CategoriasWooSchema = z.enum([
   "golf"
 ]).describe("Filtro por categorías, usar las categorías disponibles infiriendo el contexto conversacional.").default("");
 
+export const CategoriasWooHopOnSchema = z.enum([
+  "hop"
+]).describe("Filtro por categorías, usar las categorías disponibles infiriendo el contexto conversacional.");
+
 export type CategoriasWoo = z.infer<typeof CategoriasWooSchema>;
 
 export const ListarExcursionesWooInputSchema = z.object({
   consulta: z
     .object({
       nombre: CategoriasWooSchema,
+      precio_min: Precio.min(0).default(0).describe("Precio mínimo. Solo utilizar si el usuario especifica un rango de precios. De lo contrario, dejar en default."),
+      precio_max: Precio.min(0).max(999999).default(0).describe("Precio máximo. Solo utilizar si el usuario especifica un rango de precios. De lo contrario dejar en default."),
+    })
+});
+
+export const ListarExcursionesWooHopOn = z.object({
+  consulta: z
+    .object({
+      nombre: CategoriasWooHopOnSchema,
       precio_min: Precio.min(0).default(0).describe("Precio mínimo. Solo utilizar si el usuario especifica un rango de precios. De lo contrario, dejar en default."),
       precio_max: Precio.min(0).max(999999).default(0).describe("Precio máximo. Solo utilizar si el usuario especifica un rango de precios. De lo contrario dejar en default."),
     })
