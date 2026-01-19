@@ -15,7 +15,7 @@ import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
 import { setAreaNegocio } from "../helpers/user_config/user_settings.js";
 
 
-const link_ngrok = "https://26e30d954b39.ngrok-free.app/mcp";
+const link_ngrok = "https://352d1c860c0c.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
 
 
