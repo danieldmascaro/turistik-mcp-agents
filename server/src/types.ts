@@ -13,6 +13,16 @@ const Precio = z.coerce.number();
 
 export const text = (t: string) => ({ type: "text", text: t } as const);
 
+export const ConsultaHopOnSchema = z.enum([
+    "Paradas",
+    "Otros"
+]).describe("Ingresa una opción para consultar información")
+export type ConsultaHopOn = z.infer<typeof ConsultaHopOnSchema>;
+export const ConsultaHopOnInputSchema = z.object({
+  consulta: ConsultaHopOnSchema,
+});
+export type ConsultaHopOnInput = z.infer<typeof ConsultaHopOnInputSchema>;
+
 export const CategoriasWooSchema = z.enum([
   "",
   "playa",
@@ -27,7 +37,7 @@ export const CategoriasWooSchema = z.enum([
   "Cerro San Cristóbal",
   "Hop On",
   "golf"
-]).describe("Filtro por categorías, usar las categorías disponibles infiriendo el contexto conversacional.").default("");
+]).describe("Usa las categorías disponibles infiriendo el contexto conversacional.").default("");
 
 export const CategoriasWooHopOnSchema = z.enum([
   "hop"

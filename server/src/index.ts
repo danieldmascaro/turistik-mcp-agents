@@ -6,7 +6,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { listarExcursionesWoo, obtenerExcursionWooPorId } from "./services/woo/main.js";
-import { type WooListProductsQuery, type ListarExcursionesWooInput, ListarExcursionesWooInputSchema, text, ListarExcursionesWooHopOn, IdWooValues } from "./types.js";
+import { getParadasHopOn } from "./services/sqlServices/db_utils.js";
+import { type WooListProductsQuery, type ListarExcursionesWooInput, type ConsultaHopOnInput, ListarExcursionesWooInputSchema, text, ListarExcursionesWooHopOn, IdWooValues, ConsultaHopOnInputSchema } from "./types.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -208,6 +209,43 @@ server.registerTool(
       }
     }
   );
+  server.registerTool(
+    "InfoHopOn",
+    {
+      title: "Herramienta para obtener detalles del servicio de Hop On-Hop Off",
+      description:
+        "Utiliza esta herramienta para obtener información sobre las paradas del servicio del bus Hop On-Hop Off",
+        inputSchema: ConsultaHopOnInputSchema,
+        outputSchema: {
+          data: z.unknown().describe("Información consultada")
+        },
+    },
+    async ({ consulta }: ConsultaHopOnInput) => {
+      if (consulta !== "Paradas") {
+        return {
+          content: [text("Consulta no soportada para paradas.")],
+          structuredContent: { data: { error: "UNSUPPORTED_QUERY", consulta } },
+        };
+      }
+
+      try {
+        const data = await getParadasHopOn();
+        return {
+          content: [text(data)],
+          structuredContent: { data },
+        };
+      } catch (err: any) {
+        const message =
+          typeof err?.message === "string"
+            ? err.message
+            : "Error desconocido consultando paradas Hop On-Hop Off";
+        return {
+          content: [text(`Fallo ParadasHopOnHopOff: ${message}`)],
+          structuredContent: { data: { error: "API_ERROR", message } },
+        };
+      }
+    }
+  )
   server.registerTool(
     "CuposTeleferico",
     {

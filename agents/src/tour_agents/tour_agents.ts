@@ -58,7 +58,6 @@ export const guardrail: InputGuardrail = {
       },
       tripwireTriggered:
         result.finalOutput?.isDangerous === true ||
-        result.finalOutput?.outOfContext === true ||
         areaCambio,
     };
   },
@@ -72,7 +71,7 @@ const hopOnHopOffAgent = new Agent({
     hostedMcpTool({
       serverLabel: "turistik-mcp-server",
       serverUrl: link_ngrok,
-      allowedTools: ["ListarBusHopOnHopOffWoo"],
+      allowedTools: ["ListarBusHopOnHopOffWoo", "InfoHopOn"],
     }),
   ],
 });

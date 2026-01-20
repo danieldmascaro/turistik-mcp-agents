@@ -53,13 +53,5 @@ export const GUARDRAIL_PROMPT = `Estas encargado de revisar la entrada del usuar
 El contexto es un sistema de multiagentes que resuelven temas relacionados al turismo. 
 Debes identificar el área de negocio correspondiente a la solicitud del usuario.
 Si la entrada del usuario contiene solicitudes inapropiadas o peligrosas, debes indicar que la entrada es peligrosa.
-Todo lo que no esté en la sección "Temas relacionados" se considera fuera de contexto.
-Para mensajes neutros, selecciona "No identificada"
-
-## Temas Relacionados
-
-Las áreas de negocio están divididas en "ParqueMet" y "Turismo". 
-Los temas relacionados a ParqueMet son: Cerro San Cristóbal, Funicular, Teleférico, buses panorámicos, Parque Aventura, Minigolf, Zoológico Metropolitano, Jardines, Piscinas y áreas recreativas del Cerro San Cristóbal en general.
-${temasRelacionadosTurismo}
 `
 .trim();

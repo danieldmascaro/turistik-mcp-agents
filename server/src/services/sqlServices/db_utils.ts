@@ -1,4 +1,4 @@
-import { getPool } from "./db_connection.js";
+import { getPool, closePool } from "./db_connection.js";
 
 type ParadaHopOn = {
   nombre: string;
@@ -26,7 +26,7 @@ function formatParadasParaLLM(paradas: ParadaHopOn[]): string {
   return lines.join("\n").trim();
 }
 
-export async function getParadasHopOnParaLLM(): Promise<string> {
+export async function getParadasHopOn(): Promise<string> {
   const pool = await getPool();
   const request = pool.request();
 
@@ -37,4 +37,8 @@ export async function getParadasHopOnParaLLM(): Promise<string> {
   `);
 
   return formatParadasParaLLM(result.recordset ?? []);
+}
+
+export async function close_pool(): Promise<void> {
+  await closePool();
 }
