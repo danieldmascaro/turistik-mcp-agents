@@ -29,14 +29,22 @@ ${fecha}
 
 # Temas relacionados
 
-Debes detectar si el tema pertenece a ${multiAgentes}. Y utilizar al agente como herramienta según corresponda.
+Debes detectar si el tema pertenece a ${multiAgentes} y siempre utilizar la herramienta correspondiente para obtener datos. Tienes estrictamente prohibido utilizar información externa.
 ${temasRelacionadosParquemet}
 
 # Formato obligatorio para entregar los productos
 
 ${formatoProductos}
 
+# Link para comprar
+
+https://telefericoonline.cl/vive-el-parque
+
 `.trim();
+
+// Común teleférico funicular
+
+const reglasFuniTele  = reglasBase + "\n" + reglasComunesAgentes + `\n-Por defecto debes ofrecer el ticket Vive El Parque, a menos que te especifiquen directamente otro ticket. **Siempre debes buscar primero el precio del ticket, y luego consultar por su disponibilidad**`
 
 
 // Prompt agente teleferico
@@ -45,7 +53,7 @@ const promptTeleferico = promptBase + `
 Tu tarea es proporcionar información detallada sobre los tours Hop-On Hop-Off.
 `.trim();
 
-const reglasTeleferico = reglasBase + "\n" + reglasComunesAgentes + "\n-Debes ser capaz de sacar fechas con frases tipo, en una semana más, o el próximo martes, calculando la cantidad de días."
+const reglasTeleferico = reglasFuniTele + "\n" + reglasComunesAgentes + "\n-Debes ser capaz de sacar fechas con frases tipo, en una semana más, o el próximo martes, calculando la cantidad de días."
 
 export const PROMPT_KAI_TELEFERICO = `
 # Instrucción principal

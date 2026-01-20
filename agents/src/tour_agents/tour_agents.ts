@@ -105,7 +105,7 @@ const toursExcursionesAgentAsTool = excursionesAgent.asTool({
 // Agente Triage
 
 export const triageAgentTurismo = Agent.create({
-  name: "Agente principal",
+  name: "Agente principal Turismo",
   instructions: PROMPT_KAI_TRIAGE_TURISMO,
   model: model,
   inputGuardrails: [guardrail],

@@ -58,7 +58,9 @@ function buildFechaBotPrompt(): string {
   const fecha_formateada = `${dd} de ${mes} de ${yyyy}`;
 
   return (
-    `Hoy es ${dia_semana}, ${fecha_formateada} y son las ${hora_formateada}. ` 
+    `Hoy es ${dia_semana}, ${fecha_formateada} y son las ${hora_formateada}. ` +
+    `Referencia: "el proximo <dia>" significa el siguiente dia de esa semana despues de hoy; ` +
+    `si hoy es ese dia, cuenta como la semana siguiente. `
   );
 }
 

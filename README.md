@@ -22,9 +22,10 @@ El repositorio se organiza en tres carpetas principales:
 Contiene la implementación del **servidor MCP**.
 
 - Entorno **Node.js + TypeScript**, con compilación a JavaScript para desarrollo y despliegue en producción.
-- `index.ts` es el punto de entrada principal.  
-  En este archivo se documentan decisiones de implementación y se levanta el servidor utilizando el SDK de MCP Servers.
-- En desarrollo local, el servidor se ejecuta mediante un **transporte STDIO**, lo que facilita el testing sin depender de infraestructura externa.
+- `src/index.ts` es el punto de entrada principal.  
+  En este archivo se registran tools, recursos UI y endpoints HTTP/SSE.
+- En desarrollo local, el servidor corre por **STDIO** y también levanta HTTP con **SSE**.
+- El servidor inyecta el widget de tours desde `front/teleferico_tours/dist` como recurso `ui://widget/carrusel_tours.html`.
 - En `package.json` se encuentran los scripts para:
   - Compilación a JavaScript
   - Ejecución en desarrollo
@@ -46,8 +47,8 @@ Para testear el servidor MCP se utiliza **MCP Inspector**:
 Incluye:
 - Helpers
 - Funciones reutilizables
-- Conexiones a bases de datos
-- Integraciones con APIs externas
+- Conexiones a bases de datos (SQL)
+- Integraciones con APIs externas (WooCommerce, OzyPark)
 - Tests asociados
 
 ---
@@ -60,23 +61,25 @@ Define la **capa de agentes LLM** y su interacción con el servidor MCP.
 - Define cómo los agentes:
   - Reciben contexto estructurado
   - Organizan información en distintos niveles
-  - Seleccionan el modelo LLM (GPT, Claude, Gemini, Mistral, etc.)
+  - Seleccionan el modelo LLM (GPT-4o-mini, GPT-5-mini)
   - Envían un JSON estructurado
   - Reciben un JSON de respuesta con múltiples campos y subcategorías
 
 #### Componentes principales
 
-- `agents/agents.ts`  
-  Implementa agentes usando el SDK de agents en TypeScript.  
-  Actualmente existe un agente básico que:
-  - Responde información de productos
-  - Filtra por tipo de conversación
+- `agents/src/main.ts`  
+  Punto de entrada de ejecuci?n local.  
+  Lee el prompt desde consola, arma contexto con historial SQL y ejecuta el agente correspondiente.
+
+- `agents/src/tour_agents/` y `agents/src/parquemet_agents/`  
+  Implementan los agentes de Turismo y ParqueMet.  
+  Usan `hostedMcpTool` para consultar tools del servidor MCP (Woo, Telef?rico, Cupos).
 
 - `agents/prompting/`  
-  Contendrá helpers orientados a:
-  - Modularizar la creación de prompts
-  - Facilitar la experimentación
-  - A futuro, integrar interfaces de monitoreo del contexto entregado a los agentes
+  Contiene helpers orientados a:
+  - Modularizar la creaci?n de prompts
+  - Facilitar la experimentaci?n
+  - Reutilizar piezas comunes (fecha, saludos, logs)
 
 ---
 
@@ -95,29 +98,30 @@ Contiene **templates de frontend** para el servidor MCP.
   4. Tomar el archivo JavaScript compilado
   5. Ubicarlo en el directorio configurado dentro del servidor MCP
 
+- Actualmente se usa `front/teleferico_tours` (Vite + React) y se sirve como widget desde el servidor.
+
 ---
 
 ## Testing de agentes y exposición del servidor
 
 Para testear el funcionamiento de los agentes:
 
-1. Se levanta el servidor MCP en local mediante HTTP
-2. Se expone el servidor utilizando **Ngrok**  
-   (esto permite evitar restricciones habituales de red, TLS o políticas de seguridad de algunas APIs de LLM)
-3. En el archivo principal de `agents/`, se configura la tool MCP:
-   ```ts
-   tools: [
-     hostedMcpTool({
-       serverLabel: 'servidor-guerra-del-pacifico',
-       serverUrl: 'LINK_DE_NGROK'
-     })
-   ]
-   ```
-4. Ejecutar:
+1. Se levanta el servidor MCP en local con:
    ```bash
    npm run dev
    ```
-5. El sistema:
+2. Se expone el servidor utilizando **Ngrok**  
+   (esto permite evitar restricciones habituales de red, TLS o políticas de seguridad de algunas APIs de LLM)
+3. Se utiliza el endpoint SSE del servidor: `https://<ngrok>/mcp`
+4. En `agents/src/tour_agents/tour_agents.ts` y `agents/src/parquemet_agents/parquemet_agents.ts` se configura `link_ngrok`:
+   ```ts
+   const link_ngrok = "https://<ngrok>/mcp";
+   ```
+5. Ejecutar:
+   ```bash
+   npm run dev
+   ```
+6. El sistema:
    - Inicializa el agente
    - Lee las tools expuestas por el servidor MCP
    - Opera a un nivel funcional básico
@@ -157,7 +161,7 @@ El foco del proyecto no está en un lenguaje específico, sino en **las abstracc
 
 ## Próximos pasos
 
-Encontrar una forma de filtrar en woocommerce con los campos actuales, pero probablemente se tendrán que añadir tags para los productos.
+Completar prompts y tools de ParqueMet (funicular, parque aventura, buses) y mejorar filtros de WooCommerce para tours.
 
 ---
 

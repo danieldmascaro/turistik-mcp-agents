@@ -213,7 +213,7 @@ server.registerTool(
     {
       title: "Cupos disponibles del teleferico",
       description:
-        "Entrega los cupos disponibles por franja horaria para un servicio y zona de origen. Utilizar solo una vez por ejecución.",
+        "Utiliza esta herramienta para chequear la disponibilidad para un producto del teleférico, en una fecha específica.",
       inputSchema: ozyParkCuposInputSchema,
       outputSchema: {
         data: z.unknown().describe("Respuesta de cupos por fecha y horario."),

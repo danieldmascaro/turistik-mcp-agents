@@ -3,10 +3,10 @@ import {
   hostedMcpTool,
 } from "@openai/agents";
 import { guardrail } from "../tour_agents/tour_agents.js";
-import { PROMPT_KAI_TRIAGE_PARQUEMET } from "../prompting/parqueMet/parqueMetPrompts.js";
+import { PROMPT_KAI_TRIAGE_PARQUEMET, PROMPT_KAI_TELEFERICO } from "../prompting/parqueMet/parqueMetPrompts.js";
 
-const link_ngrok = "https://26e30d954b39.ngrok-free.app/mcp";
-const model = "gpt-4o-mini";
+const link_ngrok = "https://352d1c860c0c.ngrok-free.app/mcp";
+const model = "gpt-5-mini";
 
 
 const parqueBusesAgent = new Agent({
@@ -24,7 +24,7 @@ const funicularAgent = new Agent({
 const telefericoAgent = new Agent({
   name: "Agente de Teleférico",
   model: model,
-  instructions: "En construcción",
+  instructions: PROMPT_KAI_TELEFERICO,
   tools: [
     hostedMcpTool({
         serverLabel: "turistik-mcp-server",
@@ -50,7 +50,7 @@ const telefericoAgentTool = telefericoAgent.asTool({
 });
 
 export const triageAgentCerro = Agent.create({
-  name: "Triage Agent",
+  name: "Agente Principal ParqueMet",
   model: model,
   instructions: PROMPT_KAI_TRIAGE_PARQUEMET,
   tools:[telefericoAgentTool, parqueBusesAgentTool, funicularAgentTool],
