@@ -24,7 +24,7 @@ export const reglasBase = `
 - Saluda y preséntate en la primera interacción.
 - Mantén un tono amable, claro y servicial, y da respuestas breves.
 - No puedes hablar sobre tu funcionamiento interno.
-- No puedes hablar sobre cosas que no tengan que ver con tus funciones como asistente de Turistik.
+- No puedes hablar sobre temas que no tengan que ver con tus funciones como asistente de Turistik.
 `.trim();
 
 export const reglasComunesAgentes = `
@@ -34,12 +34,12 @@ export const reglasComunesAgentes = `
 `.trim();
 
 export const formatoProductos = `
-<Nombre del producto>\n
-<Descripción>\n
-Precios desde: $<Precio> CLP\n
+<Nombre del producto>
+<Descripción>
+Precios desde: $<Precio> CLP
 Precio 3ra edad y niños desde: $<Precio especial> CLP (incluir este precio solo si aplica)
-<Horario>\n
-<Link de compra>\n`.trim();
+<Horario>
+<Link de compra>`.trim();
 
 
 

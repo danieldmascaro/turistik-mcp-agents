@@ -5,7 +5,7 @@ import {
 import { guardrail } from "../tour_agents/tour_agents.js";
 import { PROMPT_KAI_TRIAGE_PARQUEMET, PROMPT_KAI_TELEFERICO } from "../prompting/parqueMet/parqueMetPrompts.js";
 
-const link_ngrok = "https://352d1c860c0c.ngrok-free.app/mcp";
+const link_ngrok = "https://357091b45d12.ngrok-free.app/mcp";
 const model = "gpt-5-mini";
 
 

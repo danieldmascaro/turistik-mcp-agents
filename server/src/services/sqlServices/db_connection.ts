@@ -20,48 +20,32 @@ const config: sql.config = {
 };
 
 let poolPromise: Promise<sql.ConnectionPool> | null = null;
+let poolInstance: sql.ConnectionPool | null = null;
 
 export function getPool(): Promise<sql.ConnectionPool> {
   if (!poolPromise) {
     poolPromise = new sql.ConnectionPool(config)
       .connect()
       .then((pool) => {
-        console.log("✅ Pool de SQL creado");
+        poolInstance = pool;
+        console.log("Pool de SQL creado");
         return pool;
       })
       .catch((err) => {
         poolPromise = null;
-        console.error("❌ Error creando pool:", err);
+        console.error("Error creando pool:", err);
         throw err;
       });
   }
   return poolPromise;
 }
 
-/* ============================
-   TEST TEMPORAL DE CONEXIÓN
-   ============================ */
-
-async function testDB() {
-  try {
-    const pool = await getPool();
-
-    const result = await pool
-      .request()
-      .query("SELECT 1 AS ok FROM ia.ticket_turismo");
-
-    console.log("✅ Query ejecutada correctamente");
-    console.log("Filas:", result.recordset.length);
-    console.log("Resultado:", result.recordset[0]);
-
-    process.exit(0);
-  } catch (err) {
-    console.error("❌ Error ejecutando test DB:", err);
-    process.exit(1);
+export async function closePool(): Promise<void> {
+  if (poolInstance) {
+    await poolInstance.close();
+    poolInstance = null;
+    poolPromise = null;
   }
 }
 
-testDB().catch((err) => {
-  console.error("❌ Error inesperado en test DB:", err);
-  process.exit(1);
-});
+export { sql };

@@ -28,12 +28,12 @@ export function getPool(): Promise<sql.ConnectionPool> {
       .connect()
       .then((pool) => {
         poolInstance = pool;
-        console.log("ƒo. Pool de SQL creado");
+        console.log("Pool de SQL creado");
         return pool;
       })
       .catch((err) => {
         poolPromise = null;
-        console.error("ƒ?O Error creando pool:", err);
+        console.error("Error creando pool:", err);
         throw err;
       });
   }

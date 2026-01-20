@@ -15,13 +15,13 @@ import { GUARDRAIL_PROMPT } from "../prompting/common/system_prompt.js";
 import { setAreaNegocio } from "../helpers/user_config/user_settings.js";
 
 
-const link_ngrok = "https://352d1c860c0c.ngrok-free.app/mcp";
+const link_ngrok = "https://357091b45d12.ngrok-free.app/mcp";
 const model = "gpt-4o-mini";
 
 
 const guardrailAgent = new Agent({
   name: "Guardrail check",
-  model: "gpt-5-mini",
+  model: "gpt-4o-mini",
   instructions:
     GUARDRAIL_PROMPT,
   outputType: GuardrailOutputSchema
