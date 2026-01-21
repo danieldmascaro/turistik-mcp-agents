@@ -30,15 +30,15 @@ export async function getParadasHopOn(): Promise<string> {
   const pool = await getPool();
   const request = pool.request();
 
-  const result = await request.query<ParadaHopOn>(`
-    SELECT id, nombre, descripcion, comuna, direccion
-    FROM ia.paradas_hopon
-    ORDER BY id ASC;
-  `);
+  try {
+    const result = await request.query<ParadaHopOn>(`
+      SELECT id, nombre, descripcion, comuna, direccion
+      FROM ia.paradas_hopon
+      ORDER BY id ASC;
+    `);
 
-  return formatParadasParaLLM(result.recordset ?? []);
-}
-
-export async function close_pool(): Promise<void> {
-  await closePool();
+    return formatParadasParaLLM(result.recordset ?? []);
+  } finally {
+    await closePool();
+  }
 }

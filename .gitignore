@@ -28,6 +28,8 @@ build/
 coverage/
 .vite/
 *.tsbuildinfo
+server/assets/*
+!server/assets/.gitkeep
 
 # Environment variables and secrets
 .env

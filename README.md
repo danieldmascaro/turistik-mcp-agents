@@ -192,3 +192,55 @@ son claves para el correcto funcionamiento del servidor MCP.
 
 
 El valor principal no está en una implementación específica ni en un SDK puntual, sino en **la arquitectura, las abstracciones y el criterio aplicado al diseño de agentes y contextos**.
+
+
+---
+
+## Uso de tablas SQL
+
+El proyecto usa **Microsoft SQL Server** (driver `mssql`) tanto en `server/` como en `agents/`. La conexion se configura con variables de entorno:
+
+- `SQL_USER`
+- `SQL_SECRET`
+- `SQL_SERVER`
+- `SQL_DATABASE`
+
+Los pools de conexion se crean en:
+- `server/src/services/sqlServices/db_connection.ts`
+- `agents/src/helpers/db_helpers/db.ts`
+
+### Tablas usadas por el servidor
+
+`server/src/services/sqlServices/db_utils.ts` consulta paradas de Hop On-Hop Off:
+
+- Tabla: `ia.paradas_hopon`
+- Columnas leidas: `id`, `nombre`, `descripcion`, `comuna`, `direccion`
+- Query principal:
+  - `SELECT id, nombre, descripcion, comuna, direccion FROM ia.paradas_hopon ORDER BY id ASC;`
+- Uso: la tool `InfoHopOn` en `server/src/index.ts` llama a `getParadasHopOn()` y devuelve un texto formateado para el LLM.
+
+### Tablas usadas por los agentes
+
+`agents/src/helpers/user_config/user_settings.ts` gestiona memoria y perfil de usuario:
+
+- Tabla: `ia.usuario_web`
+  - Lectura: verifica existencia por `uid`
+  - Escritura: `INSERT INTO ia.usuario_web (uid)` cuando no existe
+  - Actualizacion: `UPDATE ia.usuario_web SET agente = @area_negocio WHERE uid = @uid`
+  - Lectura de negocio: `SELECT agente FROM ia.usuario_web WHERE uid = @uid`
+- Tabla: `ia.memoria_persistente`
+  - Lectura: historial para armar prompt (Top 10 por `fecha_envio` desc)
+  - Escritura: `INSERT INTO ia.memoria_persistente (uid, mensaje_usuario, mensaje_bot, string_fecha_hora, area)`
+  - Borrado: `DELETE FROM ia.memoria_persistente WHERE uid = @uid`
+- Tabla: `ia.memoria_corta`
+  - Escritura: `INSERT INTO ia.memoria_corta (uid, mensaje_usuario, mensaje_bot, area)`
+
+`agents/src/prompting/helpers/registro_logs.ts` registra eventos del sistema:
+
+- Tabla: `ia.kai2_logs`
+  - Escritura: `INSERT INTO ia.kai2_logs (categoria, contenido, uid)`
+
+### Flujo de uso SQL en ejecucion local
+
+- `agents/src/main.ts` arma prompts usando historial SQL, ejecuta el agente y persiste la interaccion.
+- Al finalizar se intenta cerrar el pool con `closePool()` para evitar conexiones abiertas.

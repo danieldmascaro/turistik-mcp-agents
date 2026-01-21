@@ -7,7 +7,7 @@ export type WooListProductsQuery = {
   max_price?: number;
 };
 
-export type IdWooValues = 54942 | 39546 | 44883 | 43203;
+export type IdWooValues = 54942 | 39546 | 44883 | 43203 | 4231 | 45131;
 
 const Precio = z.coerce.number();
 
@@ -65,6 +65,18 @@ export const ListarExcursionesWooHopOn = z.object({
 
 export type ListarExcursionesWooInput = z.infer<typeof ListarExcursionesWooInputSchema>;
 
+export const idWooSchema = z.object({
+  id: z.union([
+    z.literal(54942),
+    z.literal(39546),
+    z.literal(44883),
+    z.literal(43203),
+    z.literal(4231),
+    z.literal(45131),
+  ]),
+});
+
+export type idWooInput = z.infer<typeof idWooSchema>
 
 export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
   Partial<T> & { [K in Keys]-?: Required<Pick<T, K>> }[Keys]

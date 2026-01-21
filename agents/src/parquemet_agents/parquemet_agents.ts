@@ -6,13 +6,20 @@ import { guardrail } from "../tour_agents/tour_agents.js";
 import { PROMPT_KAI_TRIAGE_PARQUEMET, PROMPT_KAI_TELEFERICO } from "../prompting/parqueMet/parqueMetPrompts.js";
 
 const link_ngrok = "https://357091b45d12.ngrok-free.app/mcp";
-const model = "gpt-5-mini";
+const model = "gpt-4.1-mini";
 
 
 const parqueBusesAgent = new Agent({
   name: "Agente Parque Aventura, buses Hop On, Mini Golf.",
   model: model,
-  instructions: "En construcción"
+  instructions: "En construcción",
+  tools: [
+    hostedMcpTool({
+        serverLabel: "turistik-mcp-server",
+        serverUrl: link_ngrok,
+        allowedTools: ["WooPorId", "ListarBusHopOnHopOffWoo"],
+    }),
+  ]
 })
 
 const funicularAgent = new Agent({

@@ -49,6 +49,7 @@ export type AreaNegocio = z.infer<typeof AreaNegocioSchema>;
 
 export const GuardrailOutputSchema = z.object({
   isDangerous: z.boolean(),
+  outOfContext: z.boolean(),
   area_de_negocio: AreaNegocioSchema,
   comentario: z.string().describe("Argumentación de los parámetros elegidos"),
 });

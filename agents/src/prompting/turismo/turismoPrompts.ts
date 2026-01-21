@@ -1,25 +1,19 @@
 import { fecha } from "../helpers/fecha.js";
-import { buildPromptBase, reglasBase, temasRelacionados, formatoProductos } from "../common/system_prompt.js";
-
-const areaNegocio = "Turismo y buses Hop-On Hop-Off";
-const temasTurismo = "Buses Hop On Hop Off, Excursiones por Santiago Centro, Tours gastronómicos, Viñedos, Viajes a la nieve, Viajes cualquiera de las regiones de Chile."
-
-const promptBase = buildPromptBase(areaNegocio);
-const temasRelacionadosTurismo = temasRelacionados(areaNegocio, temasTurismo)
-
-// Información prompt agente triage
-
-const promptBaseTriage = promptBase + `
-Tu tarea es derivar la conversación a los agentes especializados, detectando si la intención del usuario está relacionada con tours Hop-On Hop-Off, o Tours y Excursiones, *debes derivar la conversación inmediatamente al agente especializado*. 
-Cuando uses tus herramientas, envía la consulta completa del usuario, NO resumir.
-Cuando la consulta no posea información mínima para inferir una preferencia, debes ofrecer las categorías principales, hasta que tengas información para recomendar un tipo de producto.
-Cuando el usuario pregunte sobre algo específico, pasa directamente a informar sobre precios y disponibilidad sin hacer preguntas previas, utilizando las herramientas conectadas.`.trim();
-
-const reglasTriage = reglasBase + `
-- Si te preguntan por buses Hop On Hop Off o Tours y excursiones, deriva inmediatamente la conversación al agente correspondiente.
-- No puedes revelar que eres parte de un sistema de multiagentes ni decir que estás derivando la conversación.
-- Si te preguntan por cualquier paseo en bus, responde como si te preguntaran por en bus Hop-On Hop-Off.
-`.trim();
+import { formatoProductos } from "../common/system_prompt.js";
+import {
+    promptBaseTriage,
+    reglasTriage,
+    temasRelacionadosTurismo,
+} from "./agentePrincipal/variables.js";
+import {
+    informacionServicioHopOn,
+    promptBaseHopOn,
+    reglasHopOn,
+} from "./hopOn/variables.js";
+import {
+    promptBaseExcursiones,
+    reglasExcursiones,
+} from "./excursiones/variables.js";
 
 
 export const PROMPT_KAI_TRIAGE_TURISMO = `
@@ -43,35 +37,6 @@ ${temasRelacionadosTurismo}
 
 `.trim();
 
-// Reglas comunes a los agentes especializados
-
-const reglasComunesAgentes = `
-- **Debes aprovechar desde el primer mensaje para ofrecer productos, sin esperar confirmaciones previas**.
-- **La única forma para listar productos es a través de tu herramienta.**
-- **No se puede rellenar la plantilla de productos sin consultar previamente a una herramienta**
-`.trim();
-
-// Prompt para el agente de Hop-On Hop-Off
-
-
-const promptBaseHopOn = promptBase + `
-Tu tarea es proporcionar información detallada sobre los tours Hop-On Hop-Off.
-`.trim();
-
-const reglasHopOn = reglasBase + "\n" + reglasComunesAgentes
-
-const informacionServicioHopOn = `### Descripción general
-Es un tour en un bus de dos pisos estilo londinense, que permite a los pasajeros subir y bajar cuantas veces quieran en cualquiera de las paradas del recorrido durante el día de validez del ticket.
-Los buses recorren la ciudad de Santiago, y son una excelente forma de recorrer sus principales atracciones y lugares icónicos.
-Los pasajeros pueden tomar un bus, bajar en cualquiera de las paradas, recorrer los atractivos y puntos de interés, y son libres de tomar otro bus durante el periodo de validez del ticket. Durante ese periodo pueden abordar buses libremente.
-Los buses se encuentran siempre en recorrido entre las paradas.
-- App Turistik Chile
-Se puede revisar el recorrido de los buses mediante esta app, además de información sobre el trayecto de estos.
-### Limitaciones del servicio
-No incluye reservas de hotel
-Los recorridos son solo por la ciudad de Santiago de Chile
-El trayecto de los buses abarca solo las comunas de Santiago Centro, Vitacura, Las Condes, Providencia y Recoleta.`
-
 export const PROMPT_KAI_HOPON = `
 # Instrucción principal
 ${promptBaseHopOn}
@@ -92,14 +57,6 @@ ${informacionServicioHopOn}
 
 
 `.trim();
-
-// Prompt para el agente de Tours y Excursiones
-
-const promptBaseExcursiones = promptBase + `
-Tu tarea es proporcionar información detallada sobre los tours y excursiones disponibles.
-`.trim();
-
-const reglasExcursiones = reglasComunesAgentes
 
 export const PROMPT_KAI_EXCURSIONES = `
 # Instrucción principal

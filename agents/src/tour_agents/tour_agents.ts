@@ -21,7 +21,7 @@ const model = "gpt-4o-mini";
 
 const guardrailAgent = new Agent({
   name: "Guardrail check",
-  model: "gpt-4o-mini",
+  model: model,
   instructions:
     GUARDRAIL_PROMPT,
   outputType: GuardrailOutputSchema
@@ -58,6 +58,7 @@ export const guardrail: InputGuardrail = {
       },
       tripwireTriggered:
         result.finalOutput?.isDangerous === true ||
+        result.finalOutput?.outOfContext === true ||
         areaCambio,
     };
   },

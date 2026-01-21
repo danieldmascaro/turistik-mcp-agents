@@ -7,7 +7,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { listarExcursionesWoo, obtenerExcursionWooPorId } from "./services/woo/main.js";
 import { getParadasHopOn } from "./services/sqlServices/db_utils.js";
-import { type WooListProductsQuery, type ListarExcursionesWooInput, type ConsultaHopOnInput, ListarExcursionesWooInputSchema, text, ListarExcursionesWooHopOn, IdWooValues, ConsultaHopOnInputSchema } from "./types.js";
+import { type WooListProductsQuery, type ListarExcursionesWooInput, type ConsultaHopOnInput, ListarExcursionesWooInputSchema, text, ListarExcursionesWooHopOn, idWooInput, ConsultaHopOnInputSchema, idWooSchema } from "./types.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -25,9 +25,9 @@ import path from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 2. Construir la ruta absoluta subiendo 2 niveles (de src a server, luego a raíz)
-const pathJS = path.resolve(__dirname, '../../front/teleferico_tours/dist/assets/index.js');
-const pathCSS = path.resolve(__dirname, '../../front/teleferico_tours/dist/assets/index.css');
+// 2. Construir la ruta absoluta apuntando a assets compilados dentro de server/
+const pathJS = path.resolve(__dirname, "../assets/index.js");
+const pathCSS = path.resolve(__dirname, "../assets/index.css");
 
 // 3. Leer los archivos
 const BUSCAR_TOUR_JS = readFileSync(pathJS, "utf-8");
@@ -68,54 +68,135 @@ function createMCPServer() {
       },
     ],
   }));
-server.registerTool(
-  "WooPorId",
-  {
-    title: "Obtener datos básicos servicio.",
-    description: "Obtiene un producto WooCommerce por su ID. Usar solo una vez por ejecución.",
-    inputSchema: z.object({
-      id: z
-        .number()
-        .describe("ID que debes ingresar para obtener los datos de tu producto."),
-    }),
-  },
-  async ({ id }: { id: number }) => {
-    try {
-      const data = await obtenerExcursionWooPorId(id);
-      return {
-        content: [text(JSON.stringify(data, null, 2))],
-        structuredContent: { data },
-      };
-    } catch (err: any) {
-      const status =
-        typeof err?.status === "number"
-          ? err.status
-          : typeof err?.response?.status === "number"
-            ? err.response.status
-            : undefined;
+  
+  server.registerTool(
+    "TicketsTeleferico",
+    {
+      title: "Informacion sobre los tickets del teleferico",
+      description:
+        "En esta herramienta encontraras informacion sobre los tickets del teleferico y su disponibilidad. Usar solo una vez por ejecución.",
+      inputSchema: ozyParkInputSchema,
+      outputSchema: {
+        data: z.array(TicketTelefericoOutputItemSchema).describe(
+          "Lista de precios por servicio, fecha y grupo etario."
+        ),
+      },
+    },
+    async ({ servicios }: { servicios: string[] }) => {
+      try {
+        const deduped = await fetchTelefericoItems({ fecha: fecha_actual, servicios });
 
-      const payloadErr = err?.payload ?? err?.response?.data ?? undefined;
+        return {
+          content: [text(JSON.stringify(deduped, null, 2))],
+          structuredContent: { data: deduped },
+        };
+      } catch (err: any) {
+        const message =
+          typeof err?.message === "string"
+            ? err.message
+            : "Error desconocido llamando Tickets Teleferico";
 
-      const message =
-        typeof err?.message === "string"
-          ? err.message
-          : "Error desconocido llamando obtenerExcursionWooPorId";
-
-      return {
-        content: [
-          text(
-            `Falló obtenerExcursionWooPorId${
-              status ? ` (status ${status})` : ""
-            }: ${message}`
-          ),
-        ],
-        structuredContent: {
-          data: { error: "API_ERROR", status, message, payload: payloadErr },
-        },
-      };
+        return {
+          content: [text(`Fallo Tickets Teleferico: ${message}`)],
+          structuredContent: { data: { error: "API_ERROR", message } },
+        };
+      }
     }
-  }
-);
+  );
+  server.registerTool(
+    "CuposTeleferico",
+    {
+      title: "Cupos disponibles del teleferico",
+      description:
+        "Utiliza esta herramienta para chequear la disponibilidad para un producto del teleférico, en una fecha específica.",
+      inputSchema: ozyParkCuposInputSchema,
+      outputSchema: {
+        data: z.unknown().describe("Respuesta de cupos por fecha y horario."),
+      },
+    },
+    async ({
+      fecha,
+      servicios,
+      zonaOrigenAka,
+    }: {
+      fecha: string;
+      servicios: string[];
+      zonaOrigenAka: "OASIS" | "TUPAHUE" | "CUMBRE";
+    }) => {
+      try {
+        const data = await fetchCuposInfo({
+          fecha,
+          servicios,
+          zonaOrigenAka,
+        });
+
+        return {
+          content: [text(JSON.stringify(data, null, 2))],
+          structuredContent: { data },
+        };
+      } catch (err: any) {
+        const message =
+          typeof err?.message === "string"
+            ? err.message
+            : "Error desconocido llamando Cupos Teleferico";
+
+        return {
+          content: [text(`Fallo Cupos Teleferico: ${message}`)],
+          structuredContent: { data: { error: "API_ERROR", message } },
+        };
+      }
+    }
+  );
+  server.registerTool(
+    "WooPorId",
+    {
+      title: "Obtener datos básicos servicio.",
+      description: `Obtiene datos como Producto principal y horarios.
+54942 = Parque Aventura Kids
+39546 = Parque Aventura
+44883 = Funicular
+43203 = Teleférico
+4231 = Buses Hop On-Hop Off
+45131 = Panorámicos`,
+      inputSchema: idWooSchema
+    },
+    async ({ id }: idWooInput) => {
+      try {
+        const data = await obtenerExcursionWooPorId(id);
+        return {
+          content: [text(JSON.stringify(data, null, 2))],
+          structuredContent: { data },
+        };
+      } catch (err: any) {
+        const status =
+          typeof err?.status === "number"
+            ? err.status
+            : typeof err?.response?.status === "number"
+              ? err.response.status
+              : undefined;
+
+        const payloadErr = err?.payload ?? err?.response?.data ?? undefined;
+
+        const message =
+          typeof err?.message === "string"
+            ? err.message
+            : "Error desconocido llamando obtenerExcursionWooPorId";
+
+        return {
+          content: [
+            text(
+              `Falló obtenerExcursionWooPorId${
+                status ? ` (status ${status})` : ""
+              }: ${message}`
+            ),
+          ],
+          structuredContent: {
+            data: { error: "API_ERROR", status, message, payload: payloadErr },
+          },
+        };
+      }
+    }
+  );
 
   server.registerTool(
     "ListarExcursionesWoo",
@@ -176,40 +257,6 @@ server.registerTool(
     }
   );
   server.registerTool(
-    "TicketsTeleferico",
-    {
-      title: "Informacion sobre los tickets del teleferico",
-      description:
-        "En esta herramienta encontraras informacion sobre los tickets del teleferico y su disponibilidad. Usar solo una vez por ejecución.",
-      inputSchema: ozyParkInputSchema,
-      outputSchema: {
-        data: z.array(TicketTelefericoOutputItemSchema).describe(
-          "Lista de precios por servicio, fecha y grupo etario."
-        ),
-      },
-    },
-    async ({ servicios }: { servicios: string[] }) => {
-      try {
-        const deduped = await fetchTelefericoItems({ fecha: fecha_actual, servicios });
-
-        return {
-          content: [text(JSON.stringify(deduped, null, 2))],
-          structuredContent: { data: deduped },
-        };
-      } catch (err: any) {
-        const message =
-          typeof err?.message === "string"
-            ? err.message
-            : "Error desconocido llamando Tickets Teleferico";
-
-        return {
-          content: [text(`Fallo Tickets Teleferico: ${message}`)],
-          structuredContent: { data: { error: "API_ERROR", message } },
-        };
-      }
-    }
-  );
-  server.registerTool(
     "InfoHopOn",
     {
       title: "Herramienta para obtener detalles del servicio de Hop On-Hop Off",
@@ -247,55 +294,11 @@ server.registerTool(
     }
   )
   server.registerTool(
-    "CuposTeleferico",
-    {
-      title: "Cupos disponibles del teleferico",
-      description:
-        "Utiliza esta herramienta para chequear la disponibilidad para un producto del teleférico, en una fecha específica.",
-      inputSchema: ozyParkCuposInputSchema,
-      outputSchema: {
-        data: z.unknown().describe("Respuesta de cupos por fecha y horario."),
-      },
-    },
-    async ({
-      fecha,
-      servicios,
-      zonaOrigenAka,
-    }: {
-      fecha: string;
-      servicios: string[];
-      zonaOrigenAka: "OASIS" | "TUPAHUE" | "CUMBRE";
-    }) => {
-      try {
-        const data = await fetchCuposInfo({
-          fecha,
-          servicios,
-          zonaOrigenAka,
-        });
-
-        return {
-          content: [text(JSON.stringify(data, null, 2))],
-          structuredContent: { data },
-        };
-      } catch (err: any) {
-        const message =
-          typeof err?.message === "string"
-            ? err.message
-            : "Error desconocido llamando Cupos Teleferico";
-
-        return {
-          content: [text(`Fallo Cupos Teleferico: ${message}`)],
-          structuredContent: { data: { error: "API_ERROR", message } },
-        };
-      }
-    }
-  );
-  server.registerTool(
   "ListarBusHopOnHopOffWoo",
   {
     title: "Listar Bus Hop-On-Hop-Off (WooCommerce)",
     description:
-      "En esta herramienta encontrarás información, disponibilidad y precios de los productos Hop On-Hop Off",
+      "En esta herramienta encontrarás información, disponibilidad y precios de los tickets del bus Hop On-Hop Off",
     inputSchema: ListarExcursionesWooInputSchema,
     outputSchema: {
       data: z.unknown().describe(
